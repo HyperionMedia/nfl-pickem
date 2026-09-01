@@ -413,7 +413,7 @@ function renderPicks(){
       : `Picks lock &amp; reveal: <b>${fmtKick(new Date(lockT).toISOString())}</b> <span id="cd"></span>`}</div>`;
 
   if(!isLocked){
-    head += `<div class="hidden-note">🙈 Picks reveal as they lock: Thu/Fri/Sat games at their own kickoff, everything else when the first Sunday game starts.</div>`;
+    head += `<div class="hidden-note">🔒 Picks reveal as they lock: Thu/Fri/Sat games at their own kickoff, everything else when the first Sunday game starts.</div>`;
   }
   head += statusCard(w);
   if(graded){
@@ -600,7 +600,7 @@ function renderLive(){
       return `<div class="${cls}"><img src="${LOGOS[ab]||''}" alt=""><span><span class="ab">${esc(ab)}</span><br><span class="nm">${esc(t.n)}</span></span><span class="sc">${sc ? (ab===g.a?sc.a:sc.h) : ''}</span></div>`;
     };
     const cells = participants().map(p=>{
-      if(!revealedG) return `<div class="pcell"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">🙈</div></div>`;
+      if(!revealedG) return `<div class="pcell"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">❓</div></div>`;
       const pk = pickFor(w,p); const pick = pk && pk.p ? pk.p[g.id] : null;
       let cls = 'pcell';
       if(pick && wn){ cls += wn!=='TIE' && pick===wn ? ' right' : ' wrong'; }
@@ -614,7 +614,7 @@ function renderLive(){
 
   const sRev = Date.now() >= sundayLock(w);
   html += `<div class="card"><b>MNF tiebreaker predictions</b><div class="pmatrix" style="padding:8px 0 0">${participants().map(p=>{
-    if(!sRev) return `<div class="pcell"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">🙈</div></div>`;
+    if(!sRev) return `<div class="pcell"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">❓</div></div>`;
     const pk = pickFor(w,p); const sv = pk && pk.s && pk.s[0]!=null ? `${pk.s[0]}–${pk.s[1]}` : '—';
     return `<div class="pcell"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">${sv}</div></div>`;
   }).join('')}</div>${res && res.done && res.mnf ? `<div class="muted small" style="margin-top:8px;text-align:center">Actual final: ${res.mnf[0]}–${res.mnf[1]}</div>` : ''}</div>`;

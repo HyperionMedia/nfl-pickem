@@ -62,6 +62,19 @@ main{max-width:760px;margin:0 auto;padding:12px 12px 30px}
 .pcell .pv{font-size:13px;font-weight:800;margin-top:2px}
 .pcell.right{border-color:var(--green)} .pcell.right .pv{color:var(--green)}
 .pcell.wrong{border-color:var(--red)} .pcell.wrong .pv{color:var(--red);text-decoration:line-through}
+.ltab{width:100%;border-collapse:collapse;font-size:12.5px}
+.ltab th{color:var(--dim);font-size:10.5px;letter-spacing:.4px;padding:6px 2px;border-bottom:1px solid var(--line);text-align:center}
+.ltab td{border-bottom:1px solid var(--line);padding:7px 2px;text-align:center;vertical-align:middle}
+.ltab tr:last-child td{border-bottom:none}
+.gcell{text-align:left!important;min-width:98px}
+.grow{display:flex;align-items:center;gap:5px;font-weight:700}
+.grow img{width:16px;height:16px;flex:none}
+.grow .s{margin-left:auto;font-weight:800;padding-right:8px}
+.grow.won{color:var(--green)}
+.gst{font-size:10px;color:var(--dim);margin-top:2px}
+.gst .liv{color:var(--gold);font-weight:700}
+.pkc{font-weight:800}
+.pkc.right{color:var(--green)} .pkc.wrong{color:var(--red);text-decoration:line-through}
 .chips{display:flex;gap:6px;padding:0 12px 10px;flex-wrap:wrap}
 .chip{font-size:11px;font-weight:800;border-radius:9px;padding:3px 8px;background:var(--panel2);border:1px solid var(--line);color:var(--dim)}
 .chip.right{color:var(--green);border-color:var(--green)}
@@ -583,41 +596,33 @@ function renderLive(){
     <button id="wPrev" ${w<=1?'disabled':''}>‹</button>
     <div class="wt"><b>Week ${w} — Live</b><div class="muted small">${finals}/${games.length} final</div></div>
     <button id="wNext" ${w>=18?'disabled':''}>›</button></div>`;
-
   html += statusCard(w);
-  html += `<div class="card" style="padding:10px 12px"><div class="muted small" style="margin-bottom:8px"><b>Correct so far this week</b></div><div class="pmatrix" style="padding:0">${participants().map(p=>
-    `<div class="pcell"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">${tally[p]} ✓</div></div>`).join('')}</div></div>`;
 
-  html += games.map(g=>{
+  html += `<div class="card" style="padding:6px 8px;overflow-x:auto"><table class="ltab"><thead><tr><th style="text-align:left;padding-left:4px">GAME</th>${participants().map(p=>`<th>${esc(pShort(p)).toUpperCase()}</th>`).join('')}</tr></thead><tbody>`;
+  games.forEach(g=>{
     const sc = live[w] && live[w][g.id];
     const wn = winNow[g.id];
     const revealedG = Date.now() >= gameLock(g,w);
-    const status = wn ? `<span class="fin">FINAL${wn==='TIE'?' (TIE)':''}</span>`
-      : (sc && sc.st && !/^(\d|Sat|Sun|Mon|Thu|Fri|Wed|Tue)/.test(sc.st) ? `<span class="liv">${esc(sc.st)}</span>` : `<span>${fmtKick(g.d)}</span>`);
-    const side = ab => {
-      const t = TEAMS[ab]||{n:ab};
-      let cls = 'lteam'; if(wn){ cls += wn===ab ? ' win' : (wn==='TIE'?'':' lose'); }
-      return `<div class="${cls}"><img src="${LOGOS[ab]||''}" alt=""><span><span class="ab">${esc(ab)}</span><br><span class="nm">${esc(t.n)}</span></span><span class="sc">${sc ? (ab===g.a?sc.a:sc.h) : ''}</span></div>`;
-    };
-    const cells = participants().map(p=>{
-      if(!revealedG) return `<div class="pcell"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">❓</div></div>`;
+    const st = wn ? `FINAL${wn==='TIE'?' (TIE)':''}`
+      : (sc && sc.st && !/^(\d|Sat|Sun|Mon|Thu|Fri|Wed|Tue)/.test(sc.st) ? `<span class="liv">${esc(sc.st)}</span>` : fmtKick(g.d));
+    const row = ab => `<div class="grow ${wn===ab?'won':''}"><img src="${LOGOS[ab]||''}" alt="">${esc(ab)}<span class="s">${sc ? (ab===g.a?sc.a:sc.h) : ''}</span></div>`;
+    html += `<tr><td class="gcell">${row(g.a)}${row(g.h)}<div class="gst">${st}${g.id===lg.id?' · <b style="color:var(--gold)">MNF</b>':''}</div></td>`;
+    participants().forEach(p=>{
+      if(!revealedG){ html += `<td class="pkc muted">❓</td>`; return; }
       const pk = pickFor(w,p); const pick = pk && pk.p ? pk.p[g.id] : null;
-      let cls = 'pcell';
-      if(pick && wn){ cls += wn!=='TIE' && pick===wn ? ' right' : ' wrong'; }
-      return `<div class="${cls}"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">${pick?esc(pick):'—'}</div></div>`;
-    }).join('');
-    const mnfTag = g.id===lg.id ? ' · <b style="color:var(--gold)">MNF</b>' : '';
-    return `<div class="game"><div class="gtop">${status}<span>${mnfTag}</span></div>
-      <div class="teams">${side(g.a)}<span class="at">@</span>${side(g.h)}</div>
-      <div class="pmatrix">${cells}</div></div>`;
-  }).join('');
-
+      let cls = 'pkc'; if(pick && wn) cls += wn!=='TIE' && pick===wn ? ' right' : ' wrong';
+      html += `<td class="${cls}">${pick?esc(pick):'—'}</td>`;
+    });
+    html += `</tr>`;
+  });
   const sRev = Date.now() >= sundayLock(w);
-  html += `<div class="card"><b>MNF tiebreaker predictions</b><div class="pmatrix" style="padding:8px 0 0">${participants().map(p=>{
-    if(!sRev) return `<div class="pcell"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">❓</div></div>`;
+  html += `<tr><td class="gcell" style="color:var(--dim);font-weight:700">Correct so far</td>${participants().map(p=>`<td class="pkc" style="color:var(--gold)">${tally[p]}</td>`).join('')}</tr>`;
+  html += `<tr><td class="gcell" style="color:var(--dim);font-weight:700">MNF prediction</td>${participants().map(p=>{
+    if(!sRev) return `<td class="pkc muted">❓</td>`;
     const pk = pickFor(w,p); const sv = pk && pk.s && pk.s[0]!=null ? `${pk.s[0]}–${pk.s[1]}` : '—';
-    return `<div class="pcell"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">${sv}</div></div>`;
-  }).join('')}</div>${res && res.done && res.mnf ? `<div class="muted small" style="margin-top:8px;text-align:center">Actual final: ${res.mnf[0]}–${res.mnf[1]}</div>` : ''}</div>`;
+    return `<td class="pkc" style="font-size:11px">${sv}</td>`;
+  }).join('')}</tr>`;
+  html += `</tbody></table>${res && res.done && res.mnf ? `<div class="muted small" style="margin:6px 2px">MNF actual: ${res.mnf[0]}–${res.mnf[1]}</div>` : ''}</div>`;
 
   $('#view').innerHTML = html;
   $('#wPrev').onclick = ()=>switchWeek(w-1);

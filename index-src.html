@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Herzog Family Pick'em 2026</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏈</text></svg>">
+<style>
+:root{
+  --bg:#0b1220; --panel:#141e33; --panel2:#1b2742; --line:#26334f;
+  --ink:#eef2fa; --dim:#93a1bd; --gold:#f5b62e; --green:#3ecf6f; --red:#ff5d6c;
+  --radius:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.45;padding-bottom:90px}
+header{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,#0b1220 70%,rgba(11,18,32,.92));backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:10px 14px 0}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:760px;margin:0 auto}
+h1{font-size:19px;margin:0;letter-spacing:.5px;font-weight:800}
+h1 .g{color:var(--gold)}
+.who{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:20px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer}
+nav{display:flex;gap:4px;max-width:760px;margin:8px auto 0}
+nav button{flex:1;background:none;border:none;color:var(--dim);font-size:13px;font-weight:700;padding:10px 4px;cursor:pointer;border-bottom:3px solid transparent;letter-spacing:.4px}
+nav button.on{color:var(--gold);border-bottom-color:var(--gold)}
+main{max-width:760px;margin:0 auto;padding:12px 12px 30px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.muted{color:var(--dim);font-size:13px}
+.small{font-size:12px}
+.wknav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
+.wknav button{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:8px 14px;font-size:16px;cursor:pointer}
+.wknav .wt{text-align:center}
+.wknav .wt b{font-size:17px}
+.lockline{text-align:center;margin:2px 0 12px;font-size:13px;color:var(--dim)}
+.lockline b{color:var(--gold)}
+.lockline.locked b{color:var(--red)}
+.game{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.gtop{display:flex;align-items:center;justify-content:space-between;padding:7px 12px 0;font-size:11.5px;color:var(--dim)}
+.gtop .liv{color:var(--gold);font-weight:700}
+.gtop .fin{color:var(--dim)}
+.teams{display:flex;gap:8px;padding:9px 10px 11px}
+.tbtn{flex:1;display:flex;align-items:center;gap:9px;background:var(--panel2);border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer;color:var(--ink);position:relative;min-height:56px}
+.tbtn img{width:38px;height:38px;flex:none}
+.tbtn .tn{text-align:left}
+.tbtn .ab{font-weight:800;font-size:15px}
+.tbtn .nm{font-size:11px;color:var(--dim)}
+.tbtn .sc{margin-left:auto;font-weight:800;font-size:17px}
+.tbtn.sel{border-color:var(--gold);background:#2a2a14;box-shadow:0 0 0 1px var(--gold) inset}
+.tbtn.win{border-color:var(--green)}
+.tbtn.lose{opacity:.55}
+.tbtn:disabled{cursor:default}
+.at{align-self:center;color:var(--dim);font-size:12px;font-weight:700}
+.chips{display:flex;gap:6px;padding:0 12px 10px;flex-wrap:wrap}
+.chip{font-size:11px;font-weight:800;border-radius:9px;padding:3px 8px;background:var(--panel2);border:1px solid var(--line);color:var(--dim)}
+.chip.right{color:var(--green);border-color:var(--green)}
+.chip.wrong{color:var(--red);border-color:var(--red);text-decoration:line-through}
+.mnf .row{display:flex;gap:10px;align-items:center;margin-top:10px}
+.mnf input{width:76px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--ink);font-size:18px;font-weight:700;text-align:center;padding:10px 4px}
+.mnf label{font-size:12px;color:var(--dim);display:block;text-align:center;margin-top:4px}
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(11,18,32,.94);border-top:1px solid var(--line);padding:10px 14px;display:none}
+.savebar.show{display:block}
+.savebar .in{max-width:760px;margin:0 auto;display:flex;gap:10px;align-items:center}
+.btn{background:var(--gold);color:#161616;border:none;border-radius:12px;font-size:15px;font-weight:800;padding:12px 22px;cursor:pointer;letter-spacing:.3px}
+.btn.sec{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.55}
+.grid{width:100%;border-collapse:collapse;font-size:13px}
+.grid th,.grid td{padding:7px 6px;text-align:center;border-bottom:1px solid var(--line)}
+.grid th{color:var(--dim);font-weight:700;font-size:11.5px}
+.grid td:first-child,.grid th:first-child{text-align:left}
+.grid .w{color:var(--gold);font-weight:800}
+.grid .coin-steal{color:var(--red);font-weight:800}
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 10px;text-align:center}
+.stat .v{font-size:21px;font-weight:800;color:var(--gold)}
+.stat .l{font-size:11px;color:var(--dim);margin-top:2px}
+.money.pos{color:var(--green)} .money.neg{color:var(--red)}
+.overlay{position:fixed;inset:0;background:rgba(5,8,16,.8);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;max-width:400px;width:100%}
+.modal h2{margin:0 0 6px;font-size:18px}
+.modal input{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--ink);font-size:15px;padding:11px 12px;margin-top:8px}
+.modal .btn{width:100%;margin-top:14px}
+.pkr{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.pkr button{background:var(--panel2);border:1px solid var(--line);border-radius:12px;color:var(--ink);font-size:16px;font-weight:700;padding:14px;cursor:pointer}
+.pkr button:hover{border-color:var(--gold)}
+.banner{background:#3a1c22;border:1px solid var(--red);color:#ffd7db;border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:12px;display:none}
+.banner.show{display:block}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:100px;background:var(--green);color:#08210f;font-weight:800;padding:10px 20px;border-radius:24px;z-index:200;font-size:14px;display:none}
+.rules h3{color:var(--gold);font-size:15px;margin:16px 0 6px}
+.rules p,.rules li{font-size:13.5px;color:#c8d2e6}
+.rules ul{padding-left:20px;margin:6px 0}
+.hidden-note{background:#14202f;border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--dim);margin-bottom:12px}
+.pot-roll{color:var(--red);font-weight:700}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+@media (max-width:420px){ .tbtn .nm{display:none} .tbtn img{width:32px;height:32px} }
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <h1>🏈 HERZOG <span class="g">PICK'EM</span> <span class="muted small">2026</span></h1>
+    <button class="who" id="whoBtn">…</button>
+  </div>
+  <nav>
+    <button id="tabPicks" class="on">PICKS</button>
+    <button id="tabBoard">STANDINGS</button>
+    <button id="tabRules">RULES</button>
+  </nav>
+</header>
+
+<main>
+  <div class="banner" id="netBanner">⚠️ Can't reach the pool server right now. Your view may be stale — picks will retry when you save.</div>
+  <div id="view"></div>
+</main>
+
+<div class="savebar" id="savebar"><div class="in">
+  <div style="flex:1"><b id="saveMsg">Unsaved picks</b><div class="muted small" id="saveSub"></div></div>
+  <button class="btn" id="saveBtn">Save picks</button>
+</div></div>
+
+<div class="toast" id="toast">Saved ✓</div>
+<div id="modalHost"></div>
+
+<script>
+//__DATA_BUNDLE__
+</script>
+<script>
+"use strict";
+/* ================= CONFIG ================= */
+const DB_URL = 'https://api.npoint.io/39bf640935bbba6767d9';
+const SEASON = 2026;
+const ANTE = 5;              // $ per player per week
+const SEASON_ANTE = 50;      // $ per player, season prize
+const N = 3;                 // human players
+const COIN = 'coin';
+const COIN_NAME = '🪙 The Coin';
+const ET = 'America/New_York';
+const XK = 'HYPERION-PICKEM-2026';
+
+/* ================= UTIL ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function etWeekday(iso){ return new Intl.DateTimeFormat('en-US',{timeZone:ET,weekday:'short'}).format(new Date(iso)); }
+function fmtKick(iso){
+  const d = new Date(iso);
+  return new Intl.DateTimeFormat('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(d);
+}
+function money(n){ const s = n<0?'-':''; return s+'$'+Math.abs(Math.round(n*100)/100).toFixed(2).replace(/\.00$/,''); }
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+/* pick obfuscation (keeps picks from casual peeking in the raw store before lock) */
+function encP(obj){ const s=JSON.stringify(obj); let o=''; for(let i=0;i<s.length;i++) o+=String.fromCharCode(s.charCodeAt(i)^XK.charCodeAt(i%XK.length)); return btoa(o); }
+function decP(x){ try{ const o=atob(x); let s=''; for(let i=0;i<o.length;i++) s+=String.fromCharCode(o.charCodeAt(i)^XK.charCodeAt(i%XK.length)); return JSON.parse(s);}catch(e){ return null; } }
+
+/* ================= SCHEDULE HELPERS ================= */
+function weekGames(w){ return SCHEDULE[w-1].games; }
+function lastGame(w){ const g=weekGames(w); return g[g.length-1]; }
+function sundayLock(w){
+  const g=weekGames(w);
+  const sun=g.filter(x=>etWeekday(x.d)==='Sun');
+  const pool=(sun.length?sun:g).map(x=>+new Date(x.d));
+  return Math.min(...pool);
+}
+function gameLock(g,w){ return Math.min(+new Date(g.d), sundayLock(w)); }
+function weekOver(w){ return Date.now() > +new Date(lastGame(w).d) + 6*3600e3; }
+function currentWeek(){ for(let w=1;w<=18;w++){ if(!weekOver(w)) return w; } return 18; }
+function revealed(w){ return Date.now() >= sundayLock(w); }
+
+/* ================= COIN ================= */
+function coinWeek(w){
+  const r = mulberry32(SEASON*10000 + w*7919);
+  const p = {};
+  weekGames(w).forEach(g => { p[g.id] = r()<0.5 ? g.a : g.h; });
+  const s = [10+Math.floor(r()*28), 10+Math.floor(r()*28)];
+  return {p,s};
+}
+
+/* ================= SHARED STATE (npoint) ================= */
+let state = null;          // shared pool state
+let live = {};             // live/espn scores per week: {gameId:{a,h,st,fin}}
+let who = null;            // my player index 0..2
+let curW = 1;              // week being viewed
+let draft = null;          // unsaved picks {p:{},s:[a,h]} for curW
+let dirty = false;
+let tab = 'picks';
+let myTag = Math.random().toString(36).slice(2,8);
+let netFail = false;
+
+function baseState(){ return {v:1, season:SEASON, setupDone:false, players:['Matt','',''], picks:{}, results:{}, rev:0}; }
+
+async function loadState(){
+  const r = await fetch(DB_URL + '?_=' + Date.now(), {cache:'no-store'});
+  if(!r.ok) throw new Error('load ' + r.status);
+  const j = await r.json();
+  return (j && typeof j === 'object' && j.v) ? j : baseState();
+}
+async function saveState(mut){
+  for(let i=0;i<3;i++){
+    let s;
+    try{ s = await loadState(); } catch(e){ s = state ? JSON.parse(JSON.stringify(state)) : baseState(); }
+    mut(s);
+    s.rev = (s.rev||0)+1;
+    s.stamp = Date.now() + ':' + myTag;
+    let ok = false;
+    try{
+      const r = await fetch(DB_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(s)});
+      ok = r.ok;
+    }catch(e){}
+    if(ok){
+      try{
+        const chk = await loadState();
+        if(chk.stamp === s.stamp){ state = chk; netFail=false; return true; }
+        // someone else wrote over us between POST and check — merge again
+      }catch(e){ state = s; return true; }
+    }
+    await new Promise(res=>setTimeout(res, 400+Math.random()*700));
+  }
+  netFail = true;
+  return false;
+}
+
+/* ================= ESPN RESULTS SYNC ================= */
+async function espnWeek(w){
+  const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=${w}&dates=${SEASON}`);
+  if(!r.ok) throw new Error('espn');
+  return r.json();
+}
+async function syncResults(){
+  const cw = currentWeek();
+  for(let w=1; w<=cw; w++){
+    const done = state.results && state.results[w] && state.results[w].done;
+    const started = Date.now() > +new Date(weekGames(w)[0].d) - 3600e3;
+    if(done || !started) continue;
+    let d; try{ d = await espnWeek(w); } catch(e){ continue; }
+    const evs = d.events || [];
+    const win = {}; const scores = {}; let allFinal = evs.length>0;
+    evs.forEach(e=>{
+      const c = e.competitions[0];
+      const fin = !!(c.status && c.status.type && c.status.type.completed);
+      const comp = {};
+      c.competitors.forEach(t=>{ comp[t.homeAway] = {ab:t.team.abbreviation, sc:+t.score}; });
+      scores[e.id] = {a:comp.away.sc, h:comp.home.sc, st:(c.status&&c.status.type&&c.status.type.shortDetail)||'', fin};
+      if(fin){ win[e.id] = comp.away.sc===comp.home.sc ? 'TIE' : (comp.away.sc>comp.home.sc ? comp.away.ab : comp.home.ab); }
+      else allFinal = false;
+    });
+    live[w] = scores;
+    if(allFinal){
+      const lg = lastGame(w); const ls = scores[lg.id];
+      await saveState(s=>{
+        s.results = s.results || {};
+        if(!s.results[w] || !s.results[w].done) s.results[w] = {done:true, w:win, mnf: ls?[ls.a,ls.h]:null};
+      });
+    }
+  }
+}
+
+/* ================= GRADING & MONEY ================= */
+function getPick(w,p){
+  const wk = state.picks && state.picks[w];
+  if(!wk || !wk[p]) return null;
+  return decP(wk[p].x);
+}
+function participants(){ return [0,1,2,COIN]; }
+function pName(p){ return p===COIN ? COIN_NAME : (state.players[p]||('Player '+(p+1))); }
+function pShort(p){ return p===COIN ? '🪙' : (state.players[p]||'P'+(p+1)).slice(0,4); }
+function pickFor(w,p){ return p===COIN ? coinWeek(w) : getPick(w,p); }
+
+function gradeWeek(w){
+  const res = state.results && state.results[w];
+  if(!res || !res.done) return null;
+  const wins = {}; const err = {};
+  const actual = res.mnf; // [away,home]
+  participants().forEach(p=>{
+    const pk = pickFor(w,p);
+    let n = 0;
+    if(pk && pk.p){ for(const gid in res.w){ if(res.w[gid] !== 'TIE' && pk.p[gid] === res.w[gid]) n++; } }
+    wins[p] = n;
+    if(pk && pk.s && actual) err[p] = Math.abs(pk.s[0]-actual[0]) + Math.abs(pk.s[1]-actual[1]);
+    else err[p] = Infinity;
+  });
+  const mx = Math.max(...participants().map(p=>wins[p]));
+  let leaders = participants().filter(p=>wins[p]===mx);
+  let tiebroken = false;
+  if(leaders.length > 1){
+    const me = Math.min(...leaders.map(p=>err[p]));
+    const after = leaders.filter(p=>err[p]===me);
+    tiebroken = after.length < leaders.length;
+    leaders = after;
+  }
+  // Coin only takes the pot outright — if it's still tied with a human after the tiebreaker, the humans win.
+  let winners, coinSteals=false;
+  if(leaders.length===1 && leaders[0]===COIN){ winners=[]; coinSteals=true; }
+  else winners = leaders.filter(p=>p!==COIN);
+  return {wins, err, leaders, winners, coinSteals, tiebroken, mx};
+}
+function seasonLedger(){
+  let carry = 0;
+  const weeks = [];
+  const net = {0:0,1:0,2:0};
+  const cum = {0:0,1:0,2:0,[COIN]:0};
+  for(let w=1;w<=18;w++){
+    const g = gradeWeek(w);
+    if(!g){ weeks.push(null); continue; }
+    const pot = N*ANTE + carry;
+    const row = {w, ...g, pot, carryIn:carry, payout:{}};
+    participants().forEach(p=>{ cum[p]+= g.wins[p]; });
+    if(g.coinSteals){ carry = pot; }
+    else { carry = 0; g.winners.forEach(p=>{ row.payout[p] = pot / g.winners.length; }); }
+    [0,1,2].forEach(p=>{ net[p] += (row.payout[p]||0) - ANTE; });
+    weeks.push(row);
+  }
+  return {weeks, net, cum, carry};
+}
+
+/* ================= RENDER ================= */
+function setTab(t){
+  tab = t;
+  $('#tabPicks').classList.toggle('on', t==='picks');
+  $('#tabBoard').classList.toggle('on', t==='board');
+  $('#tabRules').classList.toggle('on', t==='rules');
+  render();
+}
+$('#tabPicks').onclick = ()=>setTab('picks');
+$('#tabBoard').onclick = ()=>setTab('board');
+$('#tabRules').onclick = ()=>setTab('rules');
+
+function teamBtn(g, side, w){
+  const ab = side==='a' ? g.a : g.h;
+  const t = TEAMS[ab] || {n:ab};
+  const lock = Date.now() >= gameLock(g,w);
+  const sel = draft && draft.p[g.id]===ab;
+  const sc = live[w] && live[w][g.id];
+  const res = state.results && state.results[w] && state.results[w].done && state.results[w].w[g.id];
+  const fin = res || (sc && sc.fin);
+  const winner = res || (sc && sc.fin ? (sc.a===sc.h?'TIE':(sc.a>sc.h?g.a:g.h)) : null);
+  let cls = 'tbtn' + (sel?' sel':'');
+  if(fin && winner){ cls += winner===ab ? ' win' : (winner==='TIE'?'':' lose'); }
+  const score = sc ? `<span class="sc">${sc.a!=null? (side==='a'?sc.a:sc.h) : ''}</span>` : '';
+  return `<button class="${cls}" data-g="${g.id}" data-t="${ab}" ${lock?'disabled':''}>
+    <img src="${LOGOS[ab]||''}" alt="${esc(ab)}">
+    <span class="tn"><span class="ab">${esc(ab)}</span><br><span class="nm">${esc(t.n)}</span></span>
+    ${score}
+  </button>`;
+}
+
+function chipRow(g, w){
+  if(!revealed(w)) return '';
+  const res = state.results && state.results[w] && state.results[w].done ? state.results[w].w[g.id] : null;
+  const liveWin = (!res && live[w] && live[w][g.id] && live[w][g.id].fin) ? (live[w][g.id].a===live[w][g.id].h?'TIE':(live[w][g.id].a>live[w][g.id].h?g.a:g.h)) : res;
+  let html = '';
+  participants().forEach(p=>{
+    const pk = pickFor(w,p);
+    const pick = pk && pk.p ? pk.p[g.id] : null;
+    if(!pick) return;
+    let cls = 'chip';
+    if(liveWin){ cls += (liveWin!=='TIE' && pick===liveWin) ? ' right' : ' wrong'; }
+    html += `<span class="${cls}">${esc(pShort(p))} → ${esc(pick)}</span>`;
+  });
+  return html ? `<div class="chips">${html}</div>` : '';
+}
+
+function renderPicks(){
+  const w = curW;
+  const games = weekGames(w);
+  const lockT = sundayLock(w);
+  const isLocked = Date.now() >= lockT;
+  const lg = lastGame(w);
+  const graded = gradeWeek(w);
+  const led = seasonLedger();
+  const row = led.weeks[w-1];
+  const pot = row ? row.pot : N*ANTE + led.carry;
+
+  let head = `
+  <div class="wknav">
+    <button id="wPrev" ${w<=1?'disabled':''}>‹</button>
+    <div class="wt"><b>Week ${w}</b><div class="muted small">${games.length} games · pot ${money(pot)}${led.carry&&!row?` <span class="pot-roll">(incl. ${money(led.carry)} rollover)</span>`:''}</div></div>
+    <button id="wNext" ${w>=18?'disabled':''}>›</button>
+  </div>
+  <div class="lockline ${isLocked?'locked':''}">${isLocked
+      ? '<b>🔒 Picks locked & revealed</b>'
+      : `Picks lock &amp; reveal: <b>${fmtKick(new Date(lockT).toISOString())}</b> <span id="cd"></span>`}</div>`;
+
+  if(!isLocked){
+    head += `<div class="hidden-note">🙈 Everyone's picks stay hidden until the first Sunday game kicks off. Thu/Fri/Sat games lock at their own kickoff.</div>`;
+  }
+  if(graded){
+    const names = graded.coinSteals ? null : graded.winners.map(pName).join(' & ');
+    head += `<div class="card" style="text-align:center">${
+      graded.coinSteals
+      ? `<b class="pot-roll">🪙 The Coin won the week — ${money(row.pot)} rolls to Week ${w+1}!</b>`
+      : `🏆 <b style="color:var(--gold)">${esc(names)}</b> won Week ${w} — ${money(row.pot)}${graded.winners.length>1?' (split)':''}${graded.tiebroken?' <span class="muted small">(MNF tiebreaker)</span>':''}`
+    }<div class="muted small" style="margin-top:4px">${participants().map(p=>`${esc(pShort(p))}: ${graded.wins[p]}`).join(' · ')}${row.mnf||state.results[w].mnf?` · MNF final ${state.results[w].mnf?state.results[w].mnf.join('–'):''}`:''}</div></div>`;
+  }
+
+  let body = games.map(g=>{
+    const sc = live[w] && live[w][g.id];
+    const status = sc ? (sc.fin ? `<span class="fin">FINAL ${sc.a}–${sc.h}</span>` : (sc.st && !/^(\d|Sat|Sun|Mon|Thu|Fri|Wed|Tue)/.test(sc.st) ? `<span class="liv">${esc(sc.st)}</span>` : `<span>${fmtKick(g.d)}</span>`)) : `<span>${fmtKick(g.d)}</span>`;
+    const mnfTag = g.id===lg.id ? ' · <b style="color:var(--gold)">MNF tiebreaker</b>' : '';
+    return `<div class="game">
+      <div class="gtop">${status}<span>${mnfTag}</span></div>
+      <div class="teams">${teamBtn(g,'a',w)}<span class="at">@</span>${teamBtn(g,'h',w)}</div>
+      ${chipRow(g,w)}
+    </div>`;
+  }).join('');
+
+  // MNF tiebreaker inputs
+  const mt = TEAMS[lg.a], mh = TEAMS[lg.h];
+  const sLock = isLocked;
+  body += `<div class="card mnf">
+    <b>Monday Night tiebreaker</b>
+    <div class="muted small">Predict the final score: ${esc(mt?mt.n:lg.a)} @ ${esc(mh?mh.n:lg.h)}</div>
+    <div class="row">
+      <div><input id="mnfA" type="number" min="0" max="99" inputmode="numeric" ${sLock?'disabled':''} value="${draft&&draft.s&&draft.s[0]!=null?draft.s[0]:''}"><label>${esc(lg.a)} (away)</label></div>
+      <div style="font-weight:800">–</div>
+      <div><input id="mnfH" type="number" min="0" max="99" inputmode="numeric" ${sLock?'disabled':''} value="${draft&&draft.s&&draft.s[1]!=null?draft.s[1]:''}"><label>${esc(lg.h)} (home)</label></div>
+    </div>
+    ${isLocked && revealed(w) ? `<div class="muted small" style="margin-top:8px">${participants().map(p=>{const pk=pickFor(w,p);return pk&&pk.s?`${esc(pShort(p))}: ${pk.s[0]}–${pk.s[1]}`:''}).filter(Boolean).join(' · ')}</div>` : ''}
+  </div>`;
+
+  // manual fallback if auto-grading is stuck long after the week ended
+  if(weekOver(w) && !(state.results && state.results[w] && state.results[w].done)){
+    body += `<div class="card"><b>Week not auto-graded yet.</b><div class="muted small">Scores come from ESPN automatically — if this persists a day after Monday night, tap refresh below.</div>
+    <button class="btn sec" style="margin-top:8px" onclick="location.reload()">Refresh</button></div>`;
+  }
+
+  $('#view').innerHTML = head + body;
+  $('#wPrev').onclick = ()=>{ switchWeek(w-1); };
+  $('#wNext').onclick = ()=>{ switchWeek(w+1); };
+  document.querySelectorAll('.tbtn:not(:disabled)').forEach(b=>{
+    b.onclick = ()=>{
+      if(!draft) draft = {p:{},s:[null,null]};
+      draft.p[b.dataset.g] = b.dataset.t;
+      dirty = true; renderPicks(); updateSaveBar();
+    };
+  });
+  const ma=$('#mnfA'), mh2=$('#mnfH');
+  [ma,mh2].forEach(el=>{ if(el) el.oninput = ()=>{
+    if(!draft) draft = {p:{},s:[null,null]};
+    draft.s = [ma.value===''?null:+ma.value, mh2.value===''?null:+mh2.value];
+    dirty = true; updateSaveBar();
+  };});
+  startCountdown(lockT);
+  updateSaveBar();
+}
+
+let cdTimer = null;
+function startCountdown(lockT){
+  if(cdTimer) clearInterval(cdTimer);
+  const el = ()=>document.getElementById('cd');
+  const tick = ()=>{
+    const e = el(); if(!e) return;
+    let ms = lockT - Date.now();
+    if(ms<=0){ clearInterval(cdTimer); render(); return; }
+    const d=Math.floor(ms/86400e3); ms-=d*86400e3;
+    const h=Math.floor(ms/3600e3); ms-=h*3600e3;
+    const m=Math.floor(ms/60e3);
+    e.textContent = `(${d?d+'d ':''}${h}h ${m}m)`;
+  };
+  tick(); cdTimer = setInterval(tick, 30e3);
+}
+
+function switchWeek(w){
+  curW = Math.min(18, Math.max(1, w));
+  loadDraft();
+  render();
+}
+function loadDraft(){
+  const mine = who!=null ? getPick(curW, who) : null;
+  draft = mine ? JSON.parse(JSON.stringify(mine)) : null;
+  dirty = false;
+  updateSaveBar();
+}
+function updateSaveBar(){
+  const bar = $('#savebar');
+  const locked = Date.now() >= sundayLock(curW);
+  const show = dirty && !locked && who!=null && tab==='picks';
+  bar.classList.toggle('show', show);
+  if(show){
+    const total = weekGames(curW).length;
+    $('#saveMsg').textContent = `Week ${curW}: ${draft?Object.keys(draft.p).length:0}/${total} picked`;
+    $('#saveSub').textContent = draft && draft.s && draft.s[0]!=null && draft.s[1]!=null ? 'MNF tiebreaker set' : 'Don’t forget the MNF tiebreaker score';
+  }
+}
+$('#saveBtn').onclick = async ()=>{
+  if(who==null || !draft) return;
+  $('#saveBtn').disabled = true; $('#saveBtn').textContent = 'Saving…';
+  const w = curW;
+  // strip picks for games already locked individually (Thu games after kickoff) unless they match what was saved before
+  const prev = getPick(w, who);
+  const clean = {p:{}, s:draft.s||[null,null]};
+  weekGames(w).forEach(g=>{
+    const lockedGame = Date.now() >= gameLock(g,w);
+    if(lockedGame){ if(prev && prev.p && prev.p[g.id]) clean.p[g.id] = prev.p[g.id]; }
+    else if(draft.p[g.id]) clean.p[g.id] = draft.p[g.id];
+  });
+  const ok = await saveState(s=>{
+    s.picks = s.picks || {};
+    s.picks[w] = s.picks[w] || {};
+    s.picks[w][who] = {x: encP(clean), t: Date.now()};
+  });
+  $('#saveBtn').disabled = false; $('#saveBtn').textContent = 'Save picks';
+  if(ok){
+    dirty = false; updateSaveBar();
+    const t = $('#toast'); t.style.display='block'; setTimeout(()=>t.style.display='none', 1800);
+    loadDraft(); render();
+  } else {
+    alert('Could not save — check your connection and try again.');
+  }
+  $('#netBanner').classList.toggle('show', netFail);
+};
+
+function renderBoard(){
+  const led = seasonLedger();
+  const cw = currentWeek();
+  const anyGraded = led.weeks.some(x=>x);
+  const seasonPot = SEASON_ANTE*N;
+  // season leader (humans + coin for display)
+  const order = participants().slice().sort((a,b)=>led.cum[b]-led.cum[a]);
+  let html = `<div class="cards3">
+    <div class="stat"><div class="v">${money(N*ANTE + led.carry)}</div><div class="l">Week ${cw} pot${led.carry?` (+${money(led.carry)} rolled)`:''}</div></div>
+    <div class="stat"><div class="v">${money(seasonPot)}</div><div class="l">Season prize ($${SEASON_ANTE}/player)</div></div>
+    <div class="stat"><div class="v">${esc(pShort(order[0]))}</div><div class="l">Season leader (${led.cum[order[0]]} wins)</div></div>
+  </div>`;
+
+  html += `<div class="card" style="overflow-x:auto"><b>Weekly results</b><table class="grid"><thead><tr><th>Wk</th>${participants().map(p=>`<th>${esc(pShort(p))}</th>`).join('')}<th>Pot</th><th>Winner</th></tr></thead><tbody>`;
+  for(let w=1;w<=18;w++){
+    const r = led.weeks[w-1];
+    if(!r){
+      const started = Date.now() > +new Date(weekGames(w)[0].d);
+      if(w<=cw) html += `<tr><td>${w}</td>${participants().map(()=>`<td class="muted">–</td>`).join('')}<td class="muted">–</td><td class="muted">${started?'in progress':'upcoming'}</td></tr>`;
+      continue;
+    }
+    html += `<tr><td>${w}</td>${participants().map(p=>{
+      const isW = r.coinSteals ? p===COIN : r.winners.includes(p);
+      return `<td class="${isW?(p===COIN?'coin-steal':'w'):''}">${r.wins[p]}</td>`;
+    }).join('')}<td>${money(r.pot)}</td><td class="${r.coinSteals?'coin-steal':'w'}">${r.coinSteals?'🪙 rolls!':esc(r.winners.map(pShort).join('+'))}</td></tr>`;
+  }
+  html += `</tbody></table></div>`;
+
+  html += `<div class="card"><b>Money & season wins</b><table class="grid"><thead><tr><th></th>${participants().map(p=>`<th>${esc(pShort(p))}</th>`).join('')}</tr></thead><tbody>
+    <tr><td>Total correct picks</td>${participants().map(p=>`<td><b>${led.cum[p]}</b></td>`).join('')}</tr>
+    <tr><td>Weekly $ net</td>${participants().map(p=>p===COIN?`<td class="muted">${led.carry?money(led.carry)+' held':'–'}</td>`:`<td class="money ${led.net[p]>=0?'pos':'neg'}"><b>${money(led.net[p])}</b></td>`).join('')}</tr>
+  </tbody></table>
+  <div class="muted small" style="margin-top:8px">Weekly net = pots won − $${ANTE}/week ante (settled weeks only). Season $${SEASON_ANTE} prize settles after Week 18 — most total correct picks wins ${money(seasonPot)}${anyGraded?'':' '}.</div></div>`;
+
+  if(led.carry) html += `<div class="card pot-roll" style="text-align:center">🪙 The Coin is holding ${money(led.carry)} — it rolls into next week's pot!</div>`;
+  $('#view').innerHTML = html;
+}
+
+function renderRules(){
+  $('#view').innerHTML = `<div class="card rules">
+    <h3>The basics</h3>
+    <ul>
+      <li>Every week, pick a winner for every NFL game. Most correct picks wins the week.</li>
+      <li><b>$${ANTE} per player per week.</b> Weekly winner takes the pot (${money(N*ANTE)} + any rollover).</li>
+      <li><b>$${SEASON_ANTE} per player for the season.</b> Most total correct picks after Week 18 takes ${money(SEASON_ANTE*N)}. Season ties split it.</li>
+    </ul>
+    <h3>🪙 The Coin</h3>
+    <ul>
+      <li>The Coin is a computer player that flips a fair (deterministic) coin for every game — same picks for everyone, generated the moment the schedule is loaded. Nobody can change or predict them.</li>
+      <li>If <b>The Coin wins the week outright</b>, nobody wins — the whole pot rolls into next week.</li>
+      <li>The Coin also predicts an MNF score, so it competes in tiebreakers. But the Coin only steals the pot if it wins <i>alone</i> — if it's still tied with a human after the tiebreaker, the human(s) win.</li>
+    </ul>
+    <h3>Locks & secrecy</h3>
+    <ul>
+      <li>Picks can be changed until the <b>first Sunday game kicks off</b>. That's also when everyone's picks are revealed.</li>
+      <li>Thursday / Friday / Saturday games lock at their own kickoff (no picking a game you already watched), but those picks stay hidden until Sunday like everything else.</li>
+      <li>No picks saved for a week = 0 correct that week. You still owe the ante. Set a reminder.</li>
+    </ul>
+    <h3>Tiebreaker</h3>
+    <ul>
+      <li>Weekly ties are broken by the <b>Monday Night final score</b> prediction: smallest total miss (away miss + home miss) wins.</li>
+      <li>Still tied after that? The tied humans split the pot.</li>
+      <li>Games ending in an actual tie count as correct for nobody.</li>
+    </ul>
+    <h3>How scoring works</h3>
+    <ul>
+      <li>Scores and winners come straight from ESPN automatically — final results are graded the moment Monday Night ends.</li>
+      <li>Standings, money, and rollovers update themselves. No commissioner math, no arguments.</li>
+    </ul>
+    <div class="muted small" style="margin-top:14px">Honor system: this is a family pool — the site hides picks until Sunday, but it's not Fort Knox. Don't be the guy who peeks at the data store.</div>
+  </div>`;
+}
+
+function render(){
+  if(!state) return;
+  if(tab==='picks') renderPicks();
+  else if(tab==='board') renderBoard();
+  else renderRules();
+  $('#netBanner').classList.toggle('show', netFail);
+  $('#whoBtn').textContent = who==null ? 'Who are you?' : pName(who);
+  if(tab!=='picks') $('#savebar').classList.remove('show');
+}
+
+/* ================= SETUP & IDENTITY ================= */
+function showSetup(){
+  $('#modalHost').innerHTML = `<div class="overlay"><div class="modal">
+    <h2>🏈 Set up the pool</h2>
+    <div class="muted small">Enter the three players. This only happens once.</div>
+    <input id="n0" placeholder="Player 1" value="Matt">
+    <input id="n1" placeholder="Player 2 (brother)">
+    <input id="n2" placeholder="Player 3 (dad)">
+    <button class="btn" id="setupGo">Create pool</button>
+  </div></div>`;
+  $('#setupGo').onclick = async ()=>{
+    const names = [0,1,2].map(i=>$('#n'+i).value.trim()).map((v,i)=>v||'Player '+(i+1));
+    $('#setupGo').disabled = true; $('#setupGo').textContent = 'Creating…';
+    const ok = await saveState(s=>{ s.players = names; s.setupDone = true; });
+    if(ok){ $('#modalHost').innerHTML=''; showWho(); }
+    else { $('#setupGo').disabled=false; $('#setupGo').textContent='Create pool'; alert('Could not reach the pool server. Try again.'); }
+  };
+}
+function showWho(){
+  $('#modalHost').innerHTML = `<div class="overlay"><div class="modal">
+    <h2>Who are you?</h2>
+    <div class="muted small">Your picks save under this name (remembered on this device).</div>
+    <div class="pkr">${[0,1,2].map(i=>`<button data-i="${i}">${esc(state.players[i]||'Player '+(i+1))}</button>`).join('')}</div>
+  </div></div>`;
+  document.querySelectorAll('.pkr button').forEach(b=>{
+    b.onclick = ()=>{
+      who = +b.dataset.i;
+      try{ localStorage.setItem('pickem_who', String(who)); }catch(e){}
+      $('#modalHost').innerHTML='';
+      loadDraft(); render();
+    };
+  });
+}
+$('#whoBtn').onclick = ()=>{ if(state && state.setupDone) showWho(); };
+
+/* ================= BOOT ================= */
+async function boot(){
+  try{ const v = localStorage.getItem('pickem_who'); if(v!=null && v!=='') who = +v; }catch(e){}
+  curW = currentWeek();
+  try{
+    state = await loadState();
+    netFail = false;
+  }catch(e){
+    state = baseState(); netFail = true;
+  }
+  if(!state.setupDone && !netFail){ render(); showSetup(); }
+  else {
+    if(who==null && state.setupDone) showWho();
+    loadDraft(); render();
+  }
+  syncResults().then(render);
+  // periodic refresh: shared state + live scores
+  setInterval(async ()=>{
+    if(document.hidden) return;
+    try{ const s = await loadState(); if(!dirty || s.stamp!==state.stamp){ const keep=dirty; state = s; if(!keep) loadDraft(); } netFail=false; }catch(e){ netFail=true; }
+    await syncResults();
+    render();
+  }, 60e3);
+  document.addEventListener('visibilitychange', async ()=>{
+    if(document.hidden) return;
+    try{ state = await loadState(); netFail=false; }catch(e){ netFail=true; }
+    if(!dirty) loadDraft();
+    await syncResults(); render();
+  });
+}
+boot();
+</script>
+</body>
+</html>

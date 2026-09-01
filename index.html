@@ -678,35 +678,34 @@ function renderRules(){
   $('#view').innerHTML = `<div class="card rules">
     <h3>The basics</h3>
     <ul>
-      <li>Every week, pick a winner for every NFL game. Most correct picks wins the week.</li>
-      <li><b>$${ANTE} per player per week.</b> Weekly winner takes the pot (${money(N*ANTE)} + any rollover).</li>
-      <li><b>$${SEASON_ANTE} per player for the season.</b> Most total correct picks after Week 18 takes ${money(SEASON_ANTE*N)}. Season ties split it.</li>
+      <li>Pick a winner for every NFL game each week. Most correct picks wins the week.</li>
+      <li><b>$${ANTE} a player each week.</b> The winner takes the pot: ${money(N*ANTE)}, plus anything rolled over.</li>
+      <li><b>$${SEASON_ANTE} a player for the season.</b> Whoever has the most correct picks after Week 18 takes ${money(SEASON_ANTE*N)}. A season tie splits it.</li>
     </ul>
     <h3>🪙 The Coin</h3>
     <ul>
-      <li>The Coin is a computer player that flips a fair (deterministic) coin for every game — same picks for everyone, generated the moment the schedule is loaded. Nobody can change or predict them.</li>
-      <li>If <b>The Coin wins the week outright</b>, nobody wins — the whole pot rolls into next week.</li>
-      <li>The Coin also predicts an MNF score, so it competes in tiebreakers. But the Coin only steals the pot if it wins <i>alone</i> — if it's still tied with a human after the tiebreaker, the human(s) win.</li>
+      <li>The Coin is a computer player that flips a coin on every game. Its picks are fixed in advance and identical for everyone, and nobody can change them.</li>
+      <li>If <b>The Coin wins the week outright</b>, nobody gets paid. The whole pot rolls into next week.</li>
+      <li>The Coin predicts an MNF score too, so it competes in tiebreakers. It only steals the pot when it wins alone. If it's still tied with a human after the tiebreaker, the humans win.</li>
     </ul>
     <h3>Locks & secrecy</h3>
     <ul>
-      <li>Picks can be changed until the <b>first Sunday game kicks off</b>; Thursday / Friday / Saturday games lock earlier, at their own kickoff (no picking a game you already watched).</li>
-      <li>Each game's picks are revealed the moment that game locks — so Thursday picks show at Thursday kickoff, and everything else shows when the first Sunday game starts.</li>
-      <li>Each player's name is protected by a <b>4-digit PIN</b>, set on first claim. Forgot yours? Ask the commissioner to reset it.</li>
-      <li>No picks saved for a week = 0 correct that week. You still owe the ante. Set a reminder.</li>
+      <li>You can change your picks until the <b>first Sunday game kicks off</b>. Thursday, Friday, and Saturday games lock earlier, at their own kickoff, so nobody picks a game they already watched.</li>
+      <li>Picks show up as each game locks: Thursday picks at Thursday kickoff, the rest when the first Sunday game starts.</li>
+      <li>Every player name has a <b>4-digit PIN</b>, set the first time you claim it. If you forget yours, ask the commissioner for a reset.</li>
+      <li>If you don't save picks one week, you score 0 for that week and you still owe the ante. Set a reminder.</li>
     </ul>
     <h3>Tiebreaker</h3>
     <ul>
-      <li>Weekly ties are broken by the <b>Monday Night final score</b> prediction: smallest total miss (away miss + home miss) wins.</li>
-      <li>Still tied after that? The tied humans split the pot.</li>
-      <li>Games ending in an actual tie count as correct for nobody.</li>
+      <li>Weekly ties go to the <b>Monday Night score prediction</b>: whoever misses the final score by the least (away miss plus home miss) wins.</li>
+      <li>Still tied? The tied humans split the pot.</li>
+      <li>A game that ends in a tie counts as correct for nobody.</li>
     </ul>
     <h3>How scoring works</h3>
     <ul>
-      <li>Scores and winners come straight from ESPN automatically — final results are graded the moment Monday Night ends.</li>
-      <li>Standings, money, and rollovers update themselves. No commissioner math, no arguments.</li>
+      <li>Scores and winners come straight from ESPN. The week is graded as soon as the Monday night game ends.</li>
+      <li>Standings, money, and rollovers update on their own, so there's no commissioner math to argue about.</li>
     </ul>
-    <div class="muted small" style="margin-top:14px">Honor system: this is a family pool — the site hides picks until Sunday, but it's not Fort Knox. Don't be the guy who peeks at the data store.</div>
   </div>`;
 }
 

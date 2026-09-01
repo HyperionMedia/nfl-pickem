@@ -363,7 +363,7 @@ function teamBtn(g, side, w){
 }
 
 function chipRow(g, w){
-  if(!revealed(w)) return '';
+  if(Date.now() < gameLock(g,w)) return '';  // each game reveals when it locks: Thu-Sat at kickoff, rest at Sunday cutoff
   const res = state.results && state.results[w] && state.results[w].done ? state.results[w].w[g.id] : null;
   const liveWin = (!res && live[w] && live[w][g.id] && live[w][g.id].fin) ? (live[w][g.id].a===live[w][g.id].h?'TIE':(live[w][g.id].a>live[w][g.id].h?g.a:g.h)) : res;
   let html = '';
@@ -400,7 +400,7 @@ function renderPicks(){
       : `Picks lock &amp; reveal: <b>${fmtKick(new Date(lockT).toISOString())}</b> <span id="cd"></span>`}</div>`;
 
   if(!isLocked){
-    head += `<div class="hidden-note">🙈 Everyone's picks stay hidden until the first Sunday game kicks off. Thu/Fri/Sat games lock at their own kickoff.</div>`;
+    head += `<div class="hidden-note">🙈 Picks reveal as they lock: Thu/Fri/Sat games at their own kickoff, everything else when the first Sunday game starts.</div>`;
   }
   if(graded){
     const names = graded.coinSteals ? null : graded.winners.map(pName).join(' & ');
@@ -582,8 +582,8 @@ function renderRules(){
     </ul>
     <h3>Locks & secrecy</h3>
     <ul>
-      <li>Picks can be changed until the <b>first Sunday game kicks off</b>. That's also when everyone's picks are revealed.</li>
-      <li>Thursday / Friday / Saturday games lock at their own kickoff (no picking a game you already watched), but those picks stay hidden until Sunday like everything else.</li>
+      <li>Picks can be changed until the <b>first Sunday game kicks off</b>; Thursday / Friday / Saturday games lock earlier, at their own kickoff (no picking a game you already watched).</li>
+      <li>Each game's picks are revealed the moment that game locks — so Thursday picks show at Thursday kickoff, and everything else shows when the first Sunday game starts.</li>
       <li>Each player's name is protected by a <b>4-digit PIN</b>, set on first claim. Forgot yours? Ask the commissioner to reset it.</li>
       <li>No picks saved for a week = 0 correct that week. You still owe the ante. Set a reminder.</li>
     </ul>

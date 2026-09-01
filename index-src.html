@@ -291,11 +291,16 @@ async function syncResults(){
       else allFinal = false;
     });
     live[w] = scores;
-    if(allFinal){
+    // persist results game-by-game as they go final, so every device grades continuously
+    const have = (state.results && state.results[w] && state.results[w].w) ? Object.keys(state.results[w].w).length : 0;
+    if(Object.keys(win).length > have || allFinal){
       const lg = lastGame(w); const ls = scores[lg.id];
       await saveState(s=>{
         s.results = s.results || {};
-        if(!s.results[w] || !s.results[w].done) s.results[w] = {done:true, w:win, mnf: ls?[ls.a,ls.h]:null};
+        const prev = s.results[w];
+        if(prev && prev.done) return;
+        const merged = Object.assign({}, prev && prev.w, win);
+        s.results[w] = {done:allFinal, w:merged, mnf: (allFinal && ls)?[ls.a,ls.h]:null};
       });
     }
   }
@@ -314,13 +319,23 @@ function pickFor(w,p){ return p===COIN ? coinWeek(w) : getPick(w,p); }
 
 function gradeWeek(w){
   const res = state.results && state.results[w];
-  if(!res || !res.done) return null;
+  const settled = !!(res && res.done);
+  // grade every game that has gone final: saved results plus any finals this browser has seen from ESPN
+  const winMap = Object.assign({}, res && res.w);
+  if(live[w]) for(const gid in live[w]){
+    const sc = live[w][gid];
+    if(sc.fin && !winMap[gid]){
+      const g = weekGames(w).find(x=>String(x.id)===String(gid));
+      if(g) winMap[gid] = sc.a===sc.h ? 'TIE' : (sc.a>sc.h ? g.a : g.h);
+    }
+  }
+  if(!settled && Object.keys(winMap).length===0) return null;
   const wins = {}; const err = {};
-  const actual = res.mnf; // [away,home]
+  const actual = res && res.mnf; // [away,home]
   participants().forEach(p=>{
     const pk = pickFor(w,p);
     let n = 0;
-    if(pk && pk.p){ for(const gid in res.w){ if(res.w[gid] !== 'TIE' && pk.p[gid] === res.w[gid]) n++; } }
+    if(pk && pk.p){ for(const gid in winMap){ if(winMap[gid] !== 'TIE' && pk.p[gid] === winMap[gid]) n++; } }
     wins[p] = n;
     if(pk && pk.s && actual) err[p] = Math.abs(pk.s[0]-actual[0]) + Math.abs(pk.s[1]-actual[1]);
     else err[p] = Infinity;
@@ -338,7 +353,7 @@ function gradeWeek(w){
   let winners, coinSteals=false;
   if(leaders.length===1 && leaders[0]===COIN){ winners=[]; coinSteals=true; }
   else winners = leaders.filter(p=>p!==COIN);
-  return {wins, err, leaders, winners, coinSteals, tiebroken, mx};
+  return {wins, err, leaders, winners, coinSteals, tiebroken, mx, settled, finals:Object.keys(winMap).length, total:weekGames(w).length};
 }
 function seasonLedger(){
   let carry = 0;
@@ -351,6 +366,7 @@ function seasonLedger(){
     const pot = N*ANTE + carry;
     const row = {w, ...g, pot, carryIn:carry, payout:{}};
     participants().forEach(p=>{ cum[p]+= g.wins[p]; });
+    if(!g.settled){ weeks.push(row); continue; }   // live week: standings count now, money waits for the last final
     if(g.coinSteals){ carry = pot; }
     else { carry = 0; g.winners.forEach(p=>{ row.payout[p] = pot / g.winners.length; }); }
     [0,1,2].forEach(p=>{ net[p] += (row.payout[p]||0) - ANTE; });
@@ -379,7 +395,7 @@ function teamBtn(g, side, w){
   const lock = Date.now() >= gameLock(g,w);
   const sel = draft && draft.p[g.id]===ab;
   const sc = live[w] && live[w][g.id];
-  const res = state.results && state.results[w] && state.results[w].done && state.results[w].w[g.id];
+  const res = state.results && state.results[w] && state.results[w].w && state.results[w].w[g.id];
   const fin = res || (sc && sc.fin);
   const winner = res || (sc && sc.fin ? (sc.a===sc.h?'TIE':(sc.a>sc.h?g.a:g.h)) : null);
   let cls = 'tbtn' + (sel?' sel':'');
@@ -394,7 +410,7 @@ function teamBtn(g, side, w){
 
 function chipRow(g, w){
   if(Date.now() < gameLock(g,w)) return '';  // each game reveals when it locks: Thu-Sat at kickoff, rest at Sunday cutoff
-  const res = state.results && state.results[w] && state.results[w].done ? state.results[w].w[g.id] : null;
+  const res = state.results && state.results[w] && state.results[w].w ? state.results[w].w[g.id] : null;
   const liveWin = (!res && live[w] && live[w][g.id] && live[w][g.id].fin) ? (live[w][g.id].a===live[w][g.id].h?'TIE':(live[w][g.id].a>live[w][g.id].h?g.a:g.h)) : res;
   let html = '';
   participants().forEach(p=>{
@@ -418,11 +434,12 @@ function renderPicks(){
   const led = seasonLedger();
   const row = led.weeks[w-1];
   const pot = row ? row.pot : N*ANTE + led.carry;
+  const potCarry = row ? row.carryIn : led.carry;
 
   let head = `
   <div class="wknav">
     <button id="wPrev" ${w<=1?'disabled':''}>‹</button>
-    <div class="wt"><b>Week ${w}</b><div class="muted small">${games.length} games · pot ${money(pot)}${led.carry&&!row?` <span class="pot-roll">(incl. ${money(led.carry)} rollover)</span>`:''}</div></div>
+    <div class="wt"><b>Week ${w}</b><div class="muted small">${games.length} games · pot ${money(pot)}${potCarry && !(row&&row.settled)?` <span class="pot-roll">(incl. ${money(potCarry)} rollover)</span>`:''}</div></div>
     <button id="wNext" ${w>=18?'disabled':''}>›</button>
   </div>
   <div class="lockline ${isLocked?'locked':''}">${isLocked
@@ -433,7 +450,7 @@ function renderPicks(){
     head += `<div class="hidden-note">🔒 Picks reveal as they lock: Thu/Fri/Sat games at their own kickoff, everything else when the first Sunday game starts.</div>`;
   }
   head += statusCard(w);
-  if(graded){
+  if(graded && graded.settled){
     const names = graded.coinSteals ? null : graded.winners.map(pName).join(' & ');
     head += `<div class="card" style="text-align:center">${
       graded.coinSteals
@@ -584,7 +601,7 @@ function renderLive(){
   const lg = lastGame(w);
   const winNow = {};
   games.forEach(g=>{
-    const r = res && res.done ? res.w[g.id] : null;
+    const r = res && res.w ? res.w[g.id] : null;
     const sc = live[w] && live[w][g.id];
     winNow[g.id] = r || (sc && sc.fin ? (sc.a===sc.h?'TIE':(sc.a>sc.h?g.a:g.h)) : null);
   });
@@ -654,6 +671,10 @@ function renderBoard(){
       if(w<=cw) html += `<tr><td>${w}</td>${participants().map(()=>`<td class="muted">–</td>`).join('')}<td class="muted">–</td><td class="muted">${started?'in progress':'upcoming'}</td></tr>`;
       continue;
     }
+    if(!r.settled){
+      html += `<tr><td>${w}</td>${participants().map(p=>`<td>${r.wins[p]}</td>`).join('')}<td>${money(r.pot)}</td><td class="liv">live · ${r.finals}/${r.total} final</td></tr>`;
+      continue;
+    }
     html += `<tr><td>${w}</td>${participants().map(p=>{
       const isW = r.coinSteals ? p===COIN : r.winners.includes(p);
       return `<td class="${isW?(p===COIN?'coin-steal':'w'):''}">${r.wins[p]}</td>`;
@@ -700,7 +721,7 @@ function renderRules(){
     </ul>
     <h3>How scoring works</h3>
     <ul>
-      <li>Scores and winners come straight from ESPN. The week is graded as soon as the Monday night game ends.</li>
+      <li>Scores and winners come straight from ESPN. Every game is graded the moment it goes final, so the Live tab and standings move all day. The pot is awarded once the Monday night game ends.</li>
       <li>Standings, money, and rollovers update on their own, so there's no commissioner math to argue about.</li>
     </ul>
   </div>`;

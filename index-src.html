@@ -124,6 +124,19 @@ main{max-width:760px;margin:0 auto;padding:12px 12px 30px}
 </script>
 <script>
 "use strict";
+/* Any uncaught error becomes visible on the page — never a silent blank screen */
+window.addEventListener('error', function(ev){
+  try{
+    var v = document.getElementById('view');
+    if(v && !v.querySelector('.errbox')){
+      v.insertAdjacentHTML('afterbegin',
+        '<div class="errbox" style="background:#3a1c22;border:1px solid #ff5d6c;border-radius:12px;padding:12px;margin-bottom:12px;font-size:13px">'+
+        '<b>⚠️ Something broke loading the page.</b><div style="margin-top:6px;color:#ffd7db;word-break:break-all">'+
+        String(ev.message||ev.error||'unknown error').replace(/</g,'&lt;')+'</div>'+
+        '<button onclick="location.reload(true)" style="margin-top:10px;background:#f5b62e;border:none;border-radius:10px;padding:10px 18px;font-weight:800;cursor:pointer">Reload</button></div>');
+    }
+  }catch(e){}
+});
 /* ================= CONFIG ================= */
 const DB_URL = 'https://api.npoint.io/39bf640935bbba6767d9';
 const SEASON = 2026;
@@ -582,9 +595,14 @@ function renderRules(){
 
 function render(){
   if(!state) return;
-  if(tab==='picks') renderPicks();
-  else if(tab==='board') renderBoard();
-  else renderRules();
+  try{
+    if(tab==='picks') renderPicks();
+    else if(tab==='board') renderBoard();
+    else renderRules();
+  }catch(e){
+    $('#view').innerHTML = `<div class="card"><b>⚠️ Display error:</b> <span class="muted">${esc(e.message||e)}</span><br><button class="btn" style="margin-top:10px" onclick="location.reload()">Reload</button></div>`;
+    throw e;
+  }
   $('#netBanner').classList.toggle('show', netFail);
   $('#whoBtn').textContent = who==null ? 'Who are you?' : pName(who);
   if(tab!=='picks') $('#savebar').classList.remove('show');
@@ -635,9 +653,16 @@ async function boot(){
   }catch(e){
     state = baseState(); netFail = true;
   }
-  if(!state.setupDone && !netFail){ render(); showSetup(); }
+  if(netFail){
+    $('#view').innerHTML = `<div class="card" style="text-align:center"><b>⚠️ Can't reach the pool server</b>
+      <div class="muted small" style="margin:8px 0">The schedule below still works, but picks can't load or save right now. If you use an ad-blocker or Brave shields, allow <b>api.npoint.io</b> for this site.</div>
+      <button class="btn" id="retryBtn">Retry</button></div>`;
+    $('#retryBtn').onclick = ()=>location.reload();
+    return;
+  }
+  if(!state.setupDone){ render(); showSetup(); }
   else {
-    if(who==null && state.setupDone) showWho();
+    if(who==null) showWho();
     loadDraft(); render();
   }
   syncResults().then(render);

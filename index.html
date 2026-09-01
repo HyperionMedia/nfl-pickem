@@ -130,8 +130,8 @@ main{max-width:760px;margin:0 auto;padding:12px 12px 30px}
     <button class="who" id="whoBtn">…</button>
   </div>
   <nav>
-    <button id="tabPicks" class="on">PICKS</button>
-    <button id="tabLive">LIVE</button>
+    <button id="tabPicks">PICKS</button>
+    <button id="tabLive" class="on">LIVE</button>
     <button id="tabBoard">STANDINGS</button>
     <button id="tabRules">RULES</button>
   </nav>
@@ -232,7 +232,7 @@ let who = null;            // my player index 0..2
 let curW = 1;              // week being viewed
 let draft = null;          // unsaved picks {p:{},s:[a,h]} for curW
 let dirty = false;
-let tab = 'picks';
+let tab = 'live';
 let myTag = Math.random().toString(36).slice(2,8);
 let netFail = false;
 

@@ -570,12 +570,12 @@ function pickStatus(w,p){
   const mnf = !!(pk && pk.s && pk.s[0]!=null && pk.s[1]!=null);
   if(Date.now() >= sundayLock(w)) return {icon:'🔒', n, total, mnf};
   if(n===0) return {icon:'⭕', n, total, mnf};
-  if(n<total || !mnf) return {icon:'🟡', n, total, mnf};
+  if(n<total || !mnf) return {icon:'⚠️', n, total, mnf};
   return {icon:'✅', n, total, mnf};
 }
 function statusCard(w){
   const locked = Date.now() >= sundayLock(w);
-  return `<div class="card" style="padding:10px 12px"><div class="muted small" style="margin-bottom:8px"><b>Pick status</b> — ${locked?'week is locked':'✅ in · 🟡 partial · ⭕ nothing yet'}</div>
+  return `<div class="card" style="padding:10px 12px"><div class="muted small" style="margin-bottom:8px"><b>Pick status</b> — ${locked?'week is locked':'✅ in · ⚠️ partial · ⭕ nothing yet'}</div>
   <div class="pmatrix" style="padding:0">${participants().map(p=>{
     const st = pickStatus(w,p);
     return `<div class="pcell"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">${st.icon}</div><div class="pn" style="margin-top:2px">${st.n}/${st.total}${st.mnf?' +MNF':''}</div></div>`;

@@ -74,11 +74,15 @@ main{max-width:760px;margin:0 auto;padding:12px 12px 30px}
 .gst{font-size:10px;color:var(--dim);margin-top:2px}
 .gst .liv{color:var(--gold);font-weight:700}
 .pkc{font-weight:800}
-.pkc.right{color:var(--green)} .pkc.wrong{color:var(--red);text-decoration:line-through}
+.pkbox{display:inline-flex;align-items:center;justify-content:center;padding:3px;border-radius:9px;border:1.5px solid transparent}
+.pkbox img{width:26px;height:26px;display:block}
+.pkc.right .pkbox{background:rgba(62,207,111,.20);border-color:var(--green)}
+.pkc.wrong .pkbox{background:rgba(255,93,108,.20);border-color:var(--red)}
 .chips{display:flex;gap:6px;padding:0 12px 10px;flex-wrap:wrap}
-.chip{font-size:11px;font-weight:800;border-radius:9px;padding:3px 8px;background:var(--panel2);border:1px solid var(--line);color:var(--dim)}
-.chip.right{color:var(--green);border-color:var(--green)}
-.chip.wrong{color:var(--red);border-color:var(--red);text-decoration:line-through}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;border-radius:9px;padding:3px 8px;background:var(--panel2);border:1px solid var(--line);color:var(--dim)}
+.chip img{width:16px;height:16px}
+.chip.right{color:var(--green);border-color:var(--green);background:rgba(62,207,111,.15)}
+.chip.wrong{color:var(--red);border-color:var(--red);background:rgba(255,93,108,.15)}
 .mnf .row{display:flex;gap:10px;align-items:center;margin-top:10px}
 .mnf input{width:76px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--ink);font-size:18px;font-weight:700;text-align:center;padding:10px 4px}
 .mnf label{font-size:12px;color:var(--dim);display:block;text-align:center;margin-top:4px}
@@ -399,7 +403,7 @@ function chipRow(g, w){
     if(!pick) return;
     let cls = 'chip';
     if(liveWin){ cls += (liveWin!=='TIE' && pick===liveWin) ? ' right' : ' wrong'; }
-    html += `<span class="${cls}">${esc(pShort(p))} → ${esc(pick)}</span>`;
+    html += `<span class="${cls}">${esc(pShort(p))} <img src="${LOGOS[pick]||''}" alt="${esc(pick)}" title="${esc(pick)}"></span>`;
   });
   return html ? `<div class="chips">${html}</div>` : '';
 }
@@ -611,7 +615,7 @@ function renderLive(){
       if(!revealedG){ html += `<td class="pkc muted">❓</td>`; return; }
       const pk = pickFor(w,p); const pick = pk && pk.p ? pk.p[g.id] : null;
       let cls = 'pkc'; if(pick && wn) cls += wn!=='TIE' && pick===wn ? ' right' : ' wrong';
-      html += `<td class="${cls}">${pick?esc(pick):'—'}</td>`;
+      html += `<td class="${cls}">${pick?`<span class="pkbox"><img src="${LOGOS[pick]||''}" alt="${esc(pick)}" title="${esc(pick)}"></span>`:'—'}</td>`;
     });
     html += `</tr>`;
   });

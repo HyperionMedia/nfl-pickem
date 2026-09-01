@@ -49,6 +49,19 @@ main{max-width:760px;margin:0 auto;padding:12px 12px 30px}
 .tbtn.lose{opacity:.55}
 .tbtn:disabled{cursor:default}
 .at{align-self:center;color:var(--dim);font-size:12px;font-weight:700}
+.lteam{flex:1;display:flex;align-items:center;gap:8px;background:var(--panel2);border:1.5px solid var(--line);border-radius:12px;padding:8px 10px;min-height:52px}
+.lteam img{width:34px;height:34px;flex:none}
+.lteam .ab{font-weight:800;font-size:15px}
+.lteam .nm{font-size:11px;color:var(--dim)}
+.lteam .sc{margin-left:auto;font-weight:800;font-size:17px}
+.lteam.win{border-color:var(--green)}
+.lteam.lose{opacity:.55}
+.pmatrix{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 10px 10px}
+.pcell{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px 4px;text-align:center}
+.pcell .pn{font-size:10px;color:var(--dim);font-weight:700;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcell .pv{font-size:13px;font-weight:800;margin-top:2px}
+.pcell.right{border-color:var(--green)} .pcell.right .pv{color:var(--green)}
+.pcell.wrong{border-color:var(--red)} .pcell.wrong .pv{color:var(--red);text-decoration:line-through}
 .chips{display:flex;gap:6px;padding:0 12px 10px;flex-wrap:wrap}
 .chip{font-size:11px;font-weight:800;border-radius:9px;padding:3px 8px;background:var(--panel2);border:1px solid var(--line);color:var(--dim)}
 .chip.right{color:var(--green);border-color:var(--green)}
@@ -90,7 +103,7 @@ main{max-width:760px;margin:0 auto;padding:12px 12px 30px}
 .hidden-note{background:#14202f;border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--dim);margin-bottom:12px}
 .pot-roll{color:var(--red);font-weight:700}
 .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-@media (max-width:420px){ .tbtn .nm{display:none} .tbtn img{width:32px;height:32px} }
+@media (max-width:420px){ .tbtn .nm,.lteam .nm{display:none} .tbtn img{width:32px;height:32px} .lteam img{width:28px;height:28px} }
 </style>
 </head>
 <body>
@@ -101,6 +114,7 @@ main{max-width:760px;margin:0 auto;padding:12px 12px 30px}
   </div>
   <nav>
     <button id="tabPicks" class="on">PICKS</button>
+    <button id="tabLive">LIVE</button>
     <button id="tabBoard">STANDINGS</button>
     <button id="tabRules">RULES</button>
   </nav>
@@ -335,11 +349,13 @@ function seasonLedger(){
 function setTab(t){
   tab = t;
   $('#tabPicks').classList.toggle('on', t==='picks');
+  $('#tabLive').classList.toggle('on', t==='live');
   $('#tabBoard').classList.toggle('on', t==='board');
   $('#tabRules').classList.toggle('on', t==='rules');
   render();
 }
 $('#tabPicks').onclick = ()=>setTab('picks');
+$('#tabLive').onclick = ()=>setTab('live');
 $('#tabBoard').onclick = ()=>setTab('board');
 $('#tabRules').onclick = ()=>setTab('rules');
 
@@ -402,6 +418,7 @@ function renderPicks(){
   if(!isLocked){
     head += `<div class="hidden-note">🙈 Picks reveal as they lock: Thu/Fri/Sat games at their own kickoff, everything else when the first Sunday game starts.</div>`;
   }
+  head += statusCard(w);
   if(graded){
     const names = graded.coinSteals ? null : graded.winners.map(pName).join(' & ');
     head += `<div class="card" style="text-align:center">${
@@ -528,6 +545,88 @@ $('#saveBtn').onclick = async ()=>{
   $('#netBanner').classList.toggle('show', netFail);
 };
 
+function pickStatus(w,p){
+  const total = weekGames(w).length;
+  if(p===COIN) return {icon:'✅', n:total, total, mnf:true};   // the Coin always has its picks in
+  const pk = pickFor(w,p);
+  const n = pk && pk.p ? Object.keys(pk.p).length : 0;
+  const mnf = !!(pk && pk.s && pk.s[0]!=null && pk.s[1]!=null);
+  if(Date.now() >= sundayLock(w)) return {icon:'🔒', n, total, mnf};
+  if(n===0) return {icon:'⭕', n, total, mnf};
+  if(n<total || !mnf) return {icon:'🟡', n, total, mnf};
+  return {icon:'✅', n, total, mnf};
+}
+function statusCard(w){
+  const locked = Date.now() >= sundayLock(w);
+  return `<div class="card" style="padding:10px 12px"><div class="muted small" style="margin-bottom:8px"><b>Pick status</b> — ${locked?'week is locked':'✅ in · 🟡 partial · ⭕ nothing yet'}</div>
+  <div class="pmatrix" style="padding:0">${participants().map(p=>{
+    const st = pickStatus(w,p);
+    return `<div class="pcell"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">${st.icon}</div><div class="pn" style="margin-top:2px">${st.n}/${st.total}${st.mnf?' +MNF':''}</div></div>`;
+  }).join('')}</div></div>`;
+}
+
+function renderLive(){
+  const w = curW, games = weekGames(w), res = state.results && state.results[w];
+  const lg = lastGame(w);
+  const winNow = {};
+  games.forEach(g=>{
+    const r = res && res.done ? res.w[g.id] : null;
+    const sc = live[w] && live[w][g.id];
+    winNow[g.id] = r || (sc && sc.fin ? (sc.a===sc.h?'TIE':(sc.a>sc.h?g.a:g.h)) : null);
+  });
+  const tally = {};
+  participants().forEach(p=>{
+    const pk = pickFor(w,p); let n = 0;
+    games.forEach(g=>{ const wn = winNow[g.id]; if(wn && wn!=='TIE' && pk && pk.p && pk.p[g.id]===wn) n++; });
+    tally[p] = n;
+  });
+  const finals = games.filter(g=>winNow[g.id]).length;
+
+  let html = `<div class="wknav">
+    <button id="wPrev" ${w<=1?'disabled':''}>‹</button>
+    <div class="wt"><b>Week ${w} — Live</b><div class="muted small">${finals}/${games.length} final</div></div>
+    <button id="wNext" ${w>=18?'disabled':''}>›</button></div>`;
+
+  html += statusCard(w);
+  html += `<div class="card" style="padding:10px 12px"><div class="muted small" style="margin-bottom:8px"><b>Correct so far this week</b></div><div class="pmatrix" style="padding:0">${participants().map(p=>
+    `<div class="pcell"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">${tally[p]} ✓</div></div>`).join('')}</div></div>`;
+
+  html += games.map(g=>{
+    const sc = live[w] && live[w][g.id];
+    const wn = winNow[g.id];
+    const revealedG = Date.now() >= gameLock(g,w);
+    const status = wn ? `<span class="fin">FINAL${wn==='TIE'?' (TIE)':''}</span>`
+      : (sc && sc.st && !/^(\d|Sat|Sun|Mon|Thu|Fri|Wed|Tue)/.test(sc.st) ? `<span class="liv">${esc(sc.st)}</span>` : `<span>${fmtKick(g.d)}</span>`);
+    const side = ab => {
+      const t = TEAMS[ab]||{n:ab};
+      let cls = 'lteam'; if(wn){ cls += wn===ab ? ' win' : (wn==='TIE'?'':' lose'); }
+      return `<div class="${cls}"><img src="${LOGOS[ab]||''}" alt=""><span><span class="ab">${esc(ab)}</span><br><span class="nm">${esc(t.n)}</span></span><span class="sc">${sc ? (ab===g.a?sc.a:sc.h) : ''}</span></div>`;
+    };
+    const cells = participants().map(p=>{
+      if(!revealedG) return `<div class="pcell"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">🙈</div></div>`;
+      const pk = pickFor(w,p); const pick = pk && pk.p ? pk.p[g.id] : null;
+      let cls = 'pcell';
+      if(pick && wn){ cls += wn!=='TIE' && pick===wn ? ' right' : ' wrong'; }
+      return `<div class="${cls}"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">${pick?esc(pick):'—'}</div></div>`;
+    }).join('');
+    const mnfTag = g.id===lg.id ? ' · <b style="color:var(--gold)">MNF</b>' : '';
+    return `<div class="game"><div class="gtop">${status}<span>${mnfTag}</span></div>
+      <div class="teams">${side(g.a)}<span class="at">@</span>${side(g.h)}</div>
+      <div class="pmatrix">${cells}</div></div>`;
+  }).join('');
+
+  const sRev = Date.now() >= sundayLock(w);
+  html += `<div class="card"><b>MNF tiebreaker predictions</b><div class="pmatrix" style="padding:8px 0 0">${participants().map(p=>{
+    if(!sRev) return `<div class="pcell"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">🙈</div></div>`;
+    const pk = pickFor(w,p); const sv = pk && pk.s && pk.s[0]!=null ? `${pk.s[0]}–${pk.s[1]}` : '—';
+    return `<div class="pcell"><div class="pn">${esc(pShort(p)).toUpperCase()}</div><div class="pv">${sv}</div></div>`;
+  }).join('')}</div>${res && res.done && res.mnf ? `<div class="muted small" style="margin-top:8px;text-align:center">Actual final: ${res.mnf[0]}–${res.mnf[1]}</div>` : ''}</div>`;
+
+  $('#view').innerHTML = html;
+  $('#wPrev').onclick = ()=>switchWeek(w-1);
+  $('#wNext').onclick = ()=>switchWeek(w+1);
+}
+
 function renderBoard(){
   const led = seasonLedger();
   const cw = currentWeek();
@@ -606,6 +705,7 @@ function render(){
   if(!state) return;
   try{
     if(tab==='picks') renderPicks();
+    else if(tab==='live') renderLive();
     else if(tab==='board') renderBoard();
     else renderRules();
   }catch(e){

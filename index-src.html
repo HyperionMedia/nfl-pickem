@@ -220,11 +220,9 @@ function coinWeek(w){
   const r = mulberry32(SEASON*10000 + w*7919);
   const p = {};
   weekGames(w).forEach(g => { p[g.id] = r()<0.5 ? g.a : g.h; });
-  const s = [10+Math.floor(r()*28), 10+Math.floor(r()*28)];
-  // same rule as the humans: the predicted score has to have the Coin's own MNF pick winning
-  const lg = lastGame(w); const ai = p[lg.id]===lg.a ? 0 : 1, li = 1-ai;
-  if(s[ai] < s[li]) s.reverse(); else if(s[ai]===s[li]) s[ai] += 3;
-  return {p,s};
+  // The Coin has no MNF score. It only survives a tie via step 1 (picking the MNF winner);
+  // in step 2 its miss is infinite, so any human with a score beats it.
+  return {p, s:null};
 }
 
 /* ================= SHARED STATE (npoint) ================= */
@@ -352,23 +350,26 @@ function gradeWeek(w){
     let n = 0;
     if(pk && pk.p){ for(const gid in winMap){ if(winMap[gid] !== 'TIE' && pk.p[gid] === winMap[gid]) n++; } }
     wins[p] = n;
-    if(pk && pk.s && actual) err[p] = Math.abs(pk.s[0]-actual[0]) + Math.abs(pk.s[1]-actual[1]);
+    if(pk && pk.s && pk.s[0]!=null && pk.s[1]!=null && actual) err[p] = Math.abs(pk.s[0]-actual[0]) + Math.abs(pk.s[1]-actual[1]);
     else err[p] = Infinity;
   });
   const mx = Math.max(...participants().map(p=>wins[p]));
   let leaders = participants().filter(p=>wins[p]===mx);
-  let tiebroken = false, tbBy = null;
+  let tiebroken = false, tbBy = null, tie = null;
   if(leaders.length > 1){
     // Tiebreak step 1 — the game: you have to have picked the MNF winner for your score to count.
     // If nobody in the tie picked it (or MNF ended in a tie), everyone's score counts.
-    const lg = lastGame(w); const mnfWin = winMap[lg.id];
+    const lg = lastGame(w); const mnfWin = winMap[lg.id] || null;
+    tie = {players:leaders.slice(), mnfWin, right:[], stage2:[]};
     if(mnfWin && mnfWin !== 'TIE'){
       const right = leaders.filter(p=>{ const pk = pickFor(w,p); return !!(pk && pk.p && pk.p[lg.id] === mnfWin); });
+      tie.right = right;
       if(right.length > 0 && right.length < leaders.length){ leaders = right; tiebroken = true; tbBy = 'game'; }
     }
   }
   if(leaders.length > 1){
     // Tiebreak step 2 — the score: closest predicted final among whoever is left.
+    tie.stage2 = leaders.slice();
     const me = Math.min(...leaders.map(p=>err[p]));
     const after = leaders.filter(p=>err[p]===me);
     if(after.length < leaders.length){ tiebroken = true; tbBy = tbBy ? 'game+score' : 'score'; }
@@ -378,7 +379,33 @@ function gradeWeek(w){
   let winners, coinSteals=false;
   if(leaders.length===1 && leaders[0]===COIN){ winners=[]; coinSteals=true; }
   else winners = leaders.filter(p=>p!==COIN);
-  return {wins, err, leaders, winners, coinSteals, tiebroken, tbBy, mx, settled, finals:Object.keys(winMap).length, total:weekGames(w).length};
+  return {wins, err, leaders, winners, coinSteals, tiebroken, tbBy, tie, mx, settled, finals:Object.keys(winMap).length, total:weekGames(w).length};
+}
+// Plain-English account of how a settled week's tie was resolved.
+function tieBlurb(w, g){
+  const t = g && g.settled && g.tie; if(!t) return '';
+  const res = state.results && state.results[w]; const actual = res && res.mnf;
+  const names = ps => ps.map(pName).map(esc).join(ps.length===2 ? ' and ' : ', ');
+  let out = `<b>Tiebreaker.</b> ${names(t.players)} tied at ${g.mx}. `;
+  if(t.mnfWin === 'TIE') out += `Monday night ended in a tie, so nobody picked the winner and closest score decides. `;
+  else if(!t.mnfWin) out += `Monday night isn't final yet. `;
+  else {
+    const wrong = t.players.filter(p=>!t.right.includes(p));
+    if(t.right.length===0) out += `Nobody picked ${esc(t.mnfWin)} to win Monday night, so closest score decides for everyone. `;
+    else if(wrong.length===0) out += `Everyone picked ${esc(t.mnfWin)} to win Monday night, so closest score decides. `;
+    else out += `${names(t.right)} picked ${esc(t.mnfWin)} to win Monday night; ${names(wrong)} didn't. `;
+  }
+  if(t.stage2.length > 1 && actual){
+    out += `Final was ${actual[0]}–${actual[1]}. ` + t.stage2.map(p=>{
+      const pk = pickFor(w,p);
+      return pk && pk.s && pk.s[0]!=null && pk.s[1]!=null ? `${esc(pName(p))} said ${pk.s[0]}–${pk.s[1]} (off by ${g.err[p]})` : `${esc(pName(p))} had no score`;
+    }).join(', ') + '. ';
+  }
+  if(g.coinSteals) out += `The Coin takes the week.`;
+  else if(g.winners.length===1) out += `${esc(pName(g.winners[0]))} takes the week.`;
+  else out += `Still tied, so ${names(g.winners)} split the pot.`;
+  if(!g.coinSteals && g.leaders.includes(COIN)) out += ` The Coin was tied too, but a tie with a human goes to the human.`;
+  return `<div class="muted small" style="margin-top:8px;text-align:left;line-height:1.4">${out}</div>`;
 }
 function seasonLedger(){
   let carry = 0;
@@ -480,8 +507,8 @@ function renderPicks(){
     head += `<div class="card" style="text-align:center">${
       graded.coinSteals
       ? `<b class="pot-roll">🪙 The Coin won the week — ${money(row.pot)} rolls to Week ${w+1}!</b>`
-      : `🏆 <b style="color:var(--gold)">${esc(names)}</b> won Week ${w} — ${money(row.pot)}${graded.winners.length>1?' (split)':''}${graded.tiebroken?` <span class="muted small">(MNF tiebreaker: ${({game:'picked the winner',score:'closest score','game+score':'picked the winner, then closest score'})[graded.tbBy]})</span>`:''}`
-    }<div class="muted small" style="margin-top:4px">${participants().map(p=>`${esc(pShort(p))}: ${graded.wins[p]}`).join(' · ')}${row.mnf||state.results[w].mnf?` · MNF final ${state.results[w].mnf?state.results[w].mnf.join('–'):''}`:''}</div></div>`;
+      : `🏆 <b style="color:var(--gold)">${esc(names)}</b> won Week ${w} — ${money(row.pot)}${graded.winners.length>1?' (split)':''}${graded.tiebroken?' <span class="muted small">(tiebreaker)</span>':''}`
+    }<div class="muted small" style="margin-top:4px">${participants().map(p=>`${esc(pShort(p))}: ${graded.wins[p]}`).join(' · ')}${row.mnf||state.results[w].mnf?` · MNF final ${state.results[w].mnf?state.results[w].mnf.join('–'):''}`:''}</div>${tieBlurb(w,graded)}</div>`;
   }
 
   let body = games.map(g=>{
@@ -608,7 +635,7 @@ $('#saveBtn').onclick = async ()=>{
 
 function pickStatus(w,p){
   const total = weekGames(w).length;
-  if(p===COIN) return {icon:'✅', n:total, total, mnf:true};   // the Coin always has its picks in
+  if(p===COIN) return {icon:'✅', n:total, total, mnf:false};   // the Coin always has its picks in (and never a score)
   const pk = pickFor(w,p);
   const n = pk && pk.p ? Object.keys(pk.p).length : 0;
   const mnf = !!(pk && pk.s && pk.s[0]!=null && pk.s[1]!=null);
@@ -734,7 +761,7 @@ function renderRules(){
     <ul>
       <li>The Coin is a computer player that flips a coin on every game. Its picks are fixed in advance and identical for everyone, and nobody can change them.</li>
       <li>If <b>The Coin wins the week outright</b>, nobody gets paid. The whole pot rolls into next week.</li>
-      <li>The Coin predicts an MNF score too (with its own MNF pick winning, same as everyone), so it competes in tiebreakers. It only steals the pot when it wins alone. If it's still tied with a human after the tiebreaker, the humans win.</li>
+      <li>The Coin doesn't predict an MNF score. If you tie the Coin, you win, <b>unless the Coin picked the MNF winner and you didn't</b>. Then the Coin takes the week and the pot rolls over.</li>
     </ul>
     <h3>Locks & secrecy</h3>
     <ul>

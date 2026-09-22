@@ -416,10 +416,13 @@ function tieBlurb(w, g){
     else out += `${names(t.right)} picked ${esc(t.mnfWin)} to win Monday night; ${names(wrong)} didn't. `;
   }
   if(t.stage2.length > 1 && actual){
-    out += `Final was ${actual[0]}–${actual[1]}. ` + t.stage2.map(p=>{
-      const pk = pickFor(w,p);
-      return pk && pk.s && pk.s[0]!=null && pk.s[1]!=null ? `${esc(pName(p))} said ${pk.s[0]}–${pk.s[1]} (off by ${g.err[p]})` : `${esc(pName(p))} had no score`;
-    }).join(', ') + '. ';
+    const won = t.stage2.filter(p=>g.leaders.includes(p));
+    out += `Final was <b>${actual[0]}–${actual[1]}</b>. Smallest miss (away miss + home miss) wins:<br>` + t.stage2.map(p=>{
+      const pk = pickFor(w,p); const nm = esc(pName(p)) + (won.includes(p) ? '<b>*</b>' : '');
+      if(!(pk && pk.s && pk.s[0]!=null && pk.s[1]!=null)) return `${nm} had no score`;
+      const da = Math.abs(pk.s[0]-actual[0]), dh = Math.abs(pk.s[1]-actual[1]);
+      return `${nm} said ${pk.s[0]}–${pk.s[1]}: |${pk.s[0]}−${actual[0]}| + |${pk.s[1]}−${actual[1]}| = ${da} + ${dh} = <b>${da+dh}</b>`;
+    }).join('<br>') + (won.length ? `<br><b>*</b> ${won.length>1 ? 'still tied' : 'closest'}<br>` : '<br>');
   }
   if(g.coinSteals) out += `The Coin takes the week.`;
   else if(g.winners.length===1) out += `${esc(pName(g.winners[0]))} takes the week.`;
@@ -715,10 +718,12 @@ function renderLive(){
   });
   const sRev = Date.now() >= sundayLock(w);
   html += `<tr><td class="gcell" style="color:var(--dim);font-weight:700">Correct so far</td>${participants().map(p=>`<td class="pkc" style="color:var(--gold)">${tally[p]}</td>`).join('')}</tr>`;
+  const gr = gradeWeek(w);
+  const scoreWon = (gr && gr.settled && gr.tie && gr.tie.stage2.length>1) ? gr.tie.stage2.filter(p=>gr.leaders.includes(p)) : [];
   html += `<tr><td class="gcell" style="color:var(--dim);font-weight:700">MNF prediction</td>${participants().map(p=>{
     if(!sRev) return `<td class="pkc muted">❓</td>`;
     const pk = pickFor(w,p); const sv = pk && pk.s && pk.s[0]!=null ? `${pk.s[0]}–${pk.s[1]}` : '—';
-    return `<td class="pkc" style="font-size:11px">${sv}</td>`;
+    return `<td class="pkc" style="font-size:11px">${sv}${scoreWon.includes(p)?'<b style="color:var(--gold)">*</b>':''}</td>`;
   }).join('')}</tr>`;
   html += `</tbody></table>${res && res.done && res.mnf ? `<div class="muted small" style="margin:6px 2px">MNF actual: ${res.mnf[0]}–${res.mnf[1]}</div>` : ''}${Date.now() < sundayLock(w) ? `<div class="muted small" style="margin:6px 2px">${openNote(w)}</div>` : ''}</div>`;
 

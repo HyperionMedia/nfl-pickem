@@ -215,6 +215,24 @@ function weekOver(w){ return Date.now() > +new Date(lastGame(w).d) + 6*3600e3; }
 function currentWeek(){ for(let w=1;w<=18;w++){ if(!weekOver(w)) return w; } return 18; }
 function revealed(w){ return Date.now() >= sundayLock(w); }
 
+/* ================= PICK VISIBILITY ================= */
+// Two open books: the Coin's picks are visible all week, every week, and whoever won last week
+// plays this week with their game picks visible to everyone (from the moment last week settles).
+// MNF scores are never open-book: they stay hidden until the Sunday lock for everyone.
+function prevWinners(w){
+  if(w<=1) return [];
+  const g = gradeWeek(w-1);
+  return (g && g.settled) ? g.winners.slice() : [];
+}
+function openBook(w,p){ return p===COIN || prevWinners(w).includes(p); }
+function pickVisible(w,p,g){ return openBook(w,p) || Date.now() >= gameLock(g,w); }   // one game's pick
+function openNote(w){
+  const pw = prevWinners(w);
+  let out = `${COIN_NAME}'s picks are always open.`;
+  if(pw.length) out += ` ${pw.map(pName).map(esc).join(' & ')} won Week ${w-1}, so their Week ${w} picks are open to everyone too (MNF score still hidden).`;
+  return out;
+}
+
 /* ================= COIN ================= */
 function coinWeek(w){
   const r = mulberry32(SEASON*10000 + w*7919);
@@ -461,11 +479,12 @@ function teamBtn(g, side, w){
 }
 
 function chipRow(g, w){
-  if(Date.now() < gameLock(g,w)) return '';  // each game reveals when it locks: Thu-Sat at kickoff, rest at Sunday cutoff
+  // each pick reveals when its game locks (Thu-Sat at kickoff, rest at Sunday cutoff) unless the player's book is open
   const res = state.results && state.results[w] && state.results[w].w ? state.results[w].w[g.id] : null;
   const liveWin = (!res && live[w] && live[w][g.id] && live[w][g.id].fin) ? (live[w][g.id].a===live[w][g.id].h?'TIE':(live[w][g.id].a>live[w][g.id].h?g.a:g.h)) : res;
   let html = '';
   participants().forEach(p=>{
+    if(!pickVisible(w,p,g)) return;
     const pk = pickFor(w,p);
     const pick = pk && pk.p ? pk.p[g.id] : null;
     if(!pick) return;
@@ -499,7 +518,7 @@ function renderPicks(){
       : `Picks lock &amp; reveal: <b>${fmtKick(new Date(lockT).toISOString())}</b> <span id="cd"></span>`}</div>`;
 
   if(!isLocked){
-    head += `<div class="hidden-note">🔒 Picks reveal as they lock: Thu/Fri/Sat games at their own kickoff, everything else when the first Sunday game starts.</div>`;
+    head += `<div class="hidden-note">🔒 Picks reveal as they lock: Thu/Fri/Sat games at their own kickoff, everything else when the first Sunday game starts. ${openNote(w)}</div>`;
   }
   head += statusCard(w);
   if(graded && graded.settled){
@@ -680,13 +699,12 @@ function renderLive(){
   games.forEach(g=>{
     const sc = live[w] && live[w][g.id];
     const wn = winNow[g.id];
-    const revealedG = Date.now() >= gameLock(g,w);
     const st = wn ? `FINAL${wn==='TIE'?' (TIE)':''}`
       : (sc && sc.st && !/^(\d|Sat|Sun|Mon|Thu|Fri|Wed|Tue)/.test(sc.st) ? `<span class="liv">${esc(sc.st)}</span>` : fmtKick(g.d));
     const row = ab => `<div class="grow ${wn===ab?'won':''}"><img src="${LOGOS[ab]||''}" alt="">${esc(ab)}<span class="s">${sc ? (ab===g.a?sc.a:sc.h) : ''}</span></div>`;
     html += `<tr><td class="gcell">${row(g.a)}${row(g.h)}<div class="gst">${st}${g.id===lg.id?' · <b style="color:var(--gold)">MNF</b>':''}</div></td>`;
     participants().forEach(p=>{
-      if(!revealedG){ html += `<td class="pkc muted">❓</td>`; return; }
+      if(!pickVisible(w,p,g)){ html += `<td class="pkc muted">❓</td>`; return; }
       const pk = pickFor(w,p); const pick = pk && pk.p ? pk.p[g.id] : null;
       let cls = 'pkc'; if(pick && wn) cls += wn!=='TIE' && pick===wn ? ' right' : ' wrong';
       html += `<td class="${cls}">${pick?`<span class="pkbox"><img src="${LOGOS[pick]||''}" alt="${esc(pick)}" title="${esc(pick)}"></span>`:'—'}</td>`;
@@ -700,7 +718,7 @@ function renderLive(){
     const pk = pickFor(w,p); const sv = pk && pk.s && pk.s[0]!=null ? `${pk.s[0]}–${pk.s[1]}` : '—';
     return `<td class="pkc" style="font-size:11px">${sv}</td>`;
   }).join('')}</tr>`;
-  html += `</tbody></table>${res && res.done && res.mnf ? `<div class="muted small" style="margin:6px 2px">MNF actual: ${res.mnf[0]}–${res.mnf[1]}</div>` : ''}</div>`;
+  html += `</tbody></table>${res && res.done && res.mnf ? `<div class="muted small" style="margin:6px 2px">MNF actual: ${res.mnf[0]}–${res.mnf[1]}</div>` : ''}${Date.now() < sundayLock(w) ? `<div class="muted small" style="margin:6px 2px">${openNote(w)}</div>` : ''}</div>`;
 
   $('#view').innerHTML = html;
   $('#wPrev').onclick = ()=>switchWeek(w-1);
@@ -759,7 +777,7 @@ function renderRules(){
     </ul>
     <h3>🪙 The Coin</h3>
     <ul>
-      <li>The Coin is a computer player that flips a coin on every game. Its picks are fixed in advance and identical for everyone, and nobody can change them.</li>
+      <li>The Coin is a computer player that flips a coin on every game. Its picks are fixed in advance and identical for everyone, nobody can change them, and everyone can see them all week.</li>
       <li>If <b>The Coin wins the week outright</b>, nobody gets paid. The whole pot rolls into next week.</li>
       <li>The Coin doesn't predict an MNF score. If you tie the Coin, you win, <b>unless the Coin picked the MNF winner and you didn't</b>. Then the Coin takes the week and the pot rolls over.</li>
     </ul>
@@ -767,6 +785,7 @@ function renderRules(){
     <ul>
       <li>You can change your picks until the <b>first Sunday game kicks off</b>. Thursday, Friday, and Saturday games lock earlier, at their own kickoff, so nobody picks a game they already watched.</li>
       <li>Picks show up as each game locks: Thursday picks at Thursday kickoff, the rest when the first Sunday game starts.</li>
+      <li><b>Two open books.</b> The Coin's picks are visible all week, every week. And whoever won last week plays this week with their game picks visible to everyone, from the moment last week's Monday night game ends. MNF scores are the exception: everyone's stays hidden until the Sunday lock.</li>
       <li>Every player name has a <b>4-digit PIN</b>, set the first time you claim it. If you forget yours, ask the commissioner for a reset.</li>
       <li>If you don't save picks one week, you score 0 for that week and you still owe the ante. Set a reminder.</li>
     </ul>

@@ -533,7 +533,7 @@ function renderPicks(){
       graded.coinSteals
       ? `<b class="pot-roll">🪙 The Coin won the week — ${money(row.pot)} rolls to Week ${w+1}!</b>`
       : `🏆 <b style="color:var(--gold)">${esc(names)}</b> won Week ${w} — ${money(row.pot)}${graded.winners.length>1?' (split)':''}${graded.tiebroken?' <span class="muted small">(tiebreaker)</span>':''}`
-    }<div class="muted small" style="margin-top:4px">${participants().map(p=>`${esc(pShort(p))}: ${graded.wins[p]}`).join(' · ')}${row.mnf||state.results[w].mnf?` · MNF final ${state.results[w].mnf?state.results[w].mnf.join('–'):''}`:''}</div>${tieBlurb(w,graded)}</div>`;
+    }<div class="muted small" style="margin-top:4px">${participants().map(p=>`${esc(pShort(p))}: ${graded.wins[p]}`).join(' · ')}${row.mnf||state.results[w].mnf?` · MNF final ${state.results[w].mnf?state.results[w].mnf.join('–'):''}`:''}</div></div>`;
   }
 
   let body = games.map(g=>{
@@ -727,6 +727,8 @@ function renderLive(){
     return `<td class="pkc" style="font-size:11px">${sv}${scoreWon.includes(p)?'<b style="color:var(--gold)">*</b>':''}</td>`;
   }).join('')}</tr>`;
   html += `</tbody></table>${res && res.done && res.mnf ? `<div class="muted small" style="margin:6px 2px">MNF actual: ${res.mnf[0]}–${res.mnf[1]}</div>` : ''}${Date.now() < sundayLock(w) ? `<div class="muted small" style="margin:6px 2px">${openNote(w)}</div>` : ''}</div>`;
+  const blurb = tieBlurb(w, gr);
+  if(blurb) html += `<div class="card" style="padding-top:6px">${blurb}</div>`;
 
   $('#view').innerHTML = html;
   $('#wPrev').onclick = ()=>switchWeek(w-1);

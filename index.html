@@ -402,8 +402,10 @@ function gradeWeek(w){
   return {wins, err, leaders, winners, coinSteals, tiebroken, tbBy, tie, mx, settled, finals:Object.keys(winMap).length, total:weekGames(w).length};
 }
 // Plain-English account of how a settled week's tie was resolved.
+// Only shown when the week actually came down to the MNF tiebreaker: it broke the tie, or left humans split after running.
 function tieBlurb(w, g){
   const t = g && g.settled && g.tie; if(!t) return '';
+  if(!g.tiebroken && g.winners.length < 2) return '';
   const res = state.results && state.results[w]; const actual = res && res.mnf;
   const names = ps => ps.map(pName).map(esc).join(ps.length===2 ? ' and ' : ', ');
   let out = `<b>Tiebreaker.</b> ${names(t.players)} tied at ${g.mx}. `;
@@ -415,15 +417,16 @@ function tieBlurb(w, g){
     else if(wrong.length===0) out += `Everyone picked ${esc(t.mnfWin)} to win Monday night, so closest score decides. `;
     else out += `${names(t.right)} picked ${esc(t.mnfWin)} to win Monday night; ${names(wrong)} didn't. `;
   }
-  if(t.stage2.length > 1 && actual){
-    const won = t.stage2.filter(p=>g.leaders.includes(p));
-    out += `Final was <b>${actual[0]}–${actual[1]}</b>. Smallest miss (away miss + home miss) wins:<br>` + t.stage2.map(p=>{
+  const humans2 = t.stage2.filter(p=>p!==COIN);   // the Coin never has a score, so it gets no line
+  if(humans2.length > 1 && actual){
+    const won = humans2.filter(p=>g.leaders.includes(p));
+    out += `Final was <b>${actual[0]}–${actual[1]}</b>. Smallest miss (away miss + home miss) wins:<br>` + humans2.map(p=>{
       const pk = pickFor(w,p); const nm = esc(pName(p)) + (won.includes(p) ? '<b>*</b>' : '');
       if(!(pk && pk.s && pk.s[0]!=null && pk.s[1]!=null)) return `${nm} had no score`;
       const da = Math.abs(pk.s[0]-actual[0]), dh = Math.abs(pk.s[1]-actual[1]);
       return `${nm} said ${pk.s[0]}–${pk.s[1]}: |${pk.s[0]}−${actual[0]}| + |${pk.s[1]}−${actual[1]}| = ${da} + ${dh} = <b>${da+dh}</b>`;
     }).join('<br>') + (won.length ? `<br><b>*</b> ${won.length>1 ? 'still tied' : 'closest'}<br>` : '<br>');
-  }
+  } else if(t.stage2.includes(COIN) && humans2.length===1) out += `The Coin has no score. `;
   if(g.coinSteals) out += `The Coin takes the week.`;
   else if(g.winners.length===1) out += `${esc(pName(g.winners[0]))} takes the week.`;
   else out += `Still tied, so ${names(g.winners)} split the pot.`;
